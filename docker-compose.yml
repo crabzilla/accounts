@@ -1,0 +1,20 @@
+version: '3.1'
+
+services:
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  db:
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_USER: user1
+      POSTGRES_PASSWORD: pwd1
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
