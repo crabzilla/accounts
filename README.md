@@ -17,6 +17,7 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 
 * Leverage Vert.x HA mode: event projector is a cluster aware singleton verticle.
 * It can be packaged as a native executable using [Quarkus](https://quarkus.io/)
+* It has a self-check of inconsistencies between read and write model on ```GET /inconsistencies``` route.
 
 ### Requirements
 
