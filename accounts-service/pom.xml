@@ -20,24 +20,6 @@
   <dependencies>
 
     <dependency>
-      <groupId>io.github.crabzilla</groupId>
-      <artifactId>crabzilla-pgc</artifactId>
-      <version>${crabzilla.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.github.crabzilla</groupId>
-      <artifactId>crabzilla-web</artifactId>
-      <version>${crabzilla.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.github.crabzilla</groupId>
-      <artifactId>crabzilla-webpgc</artifactId>
-      <version>${crabzilla.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-config</artifactId>
     </dependency>
