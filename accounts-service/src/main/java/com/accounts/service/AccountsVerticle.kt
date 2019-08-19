@@ -35,8 +35,8 @@ class AccountsVerticle : AbstractVerticle() {
 
     // command routes
     pgcComponent = PgcComponent(vertx, config)
-    val cmdHandlerComponent = WebPgcCmdHandlerComponent(pgcComponent, router)
-    cmdHandlerComponent.addCommandHandler("account", AccountJsonAware(), AccountCmdAware(), "accounts")
+    val webCmdHandlerComponent = WebPgcCmdHandlerComponent(pgcComponent, router)
+    webCmdHandlerComponent.addCommandHandler("account", AccountJsonAware(), AccountCmdAware(), "accounts")
 
     // reports routes
     val accountHandlers = AccountsWebHandlers(AccountsRepositoryImpl(pgcComponent.readDb))
