@@ -53,8 +53,6 @@ now let's open an account #2001 with $10.00:
 ```bash
 curl -i -X POST \
    http://localhost:8081/accounts/2001/commands/make-deposit \
-   -H 'accept: application/vnd.crabzilla.unit-of-work+json' \
-   -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 10.00}'
 ```
@@ -113,8 +111,6 @@ then let's try to withdrawn $15 from that account #2001:
 ```bash
 curl -i -X POST \
    http://localhost:8081/accounts/2001/commands/make-withdraw \
-   -H 'accept: application/vnd.crabzilla.unit-of-work+json' \
-   -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 15.00}' 
  ```
@@ -132,8 +128,6 @@ so let's make a valid withdraw:
 ```bash
 curl -i -X POST \
    http://localhost:8081/accounts/2001/commands/make-withdraw \
-   -H 'accept: application/vnd.crabzilla.unit-of-work+json' \
-   -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 6.00}' 
  ```
