@@ -13,7 +13,7 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 
 * Make a deposit (and create an account if needed) for a give account
 * Make a withdraw for a give account
-* It has a self-check of inconsistencies between read and write model on ```GET /inconsistencies``` route.
+* It has a self-check of inconsistencies between read and write models on ```GET /inconsistencies``` route.
 * Transfer between accounts (TODO using a Saga)
 
 #### Technical
