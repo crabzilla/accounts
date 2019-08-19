@@ -228,7 +228,8 @@ content-length: 44
 {
   "accountId" : 2001,
   "balance" : 4.00
-}```
+}
+```
 
 ## Developer's use cases
 
@@ -238,13 +239,6 @@ content-length: 44
 cd accounts
 docker-compose down -v
 docker-compose up
-```
-
-### Generating Dokka docs:
-
-```bash
-cd accounts-service
-mvn dokka:dokka
 ```
 
 then open ```/accounts/accounts-service/target/dokka/accounts-service/index.html``` in your browser
