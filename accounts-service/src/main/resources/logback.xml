@@ -9,22 +9,6 @@
         </encoder>
     </appender>
 
-    <logger name="com.accounts" level="INFO" additivity="false">
-        <appender-ref ref="STDOUT" />
-    </logger>
-
-    <logger name="io.github.crabzilla" level="INFO" additivity="false">
-        <appender-ref ref="STDOUT" />
-    </logger>
-
-    <logger name="io.github.crabzilla.pjc" level="INFO" additivity="false">
-        <appender-ref ref="STDOUT" />
-    </logger>
-
-    <logger name="io.github.crabzilla.web" level="INFO" additivity="false">
-        <appender-ref ref="STDOUT" />
-    </logger>
-
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
