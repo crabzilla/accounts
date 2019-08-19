@@ -11,13 +11,14 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 
 * Make a deposit (and create an account if needed) for a give account
 * Make a withdraw for a give account
+* It has a self-check of inconsistencies between read and write model on ```GET /inconsistencies``` route.
 * Transfer between accounts (TODO using a SAGA)
 
 #### Technical
 
-* Leverage Vert.x HA mode: event projector is a cluster aware singleton verticle.
+* The [UnitOfWork](https://github.com/crabzilla/crabzilla/blob/master/crabzilla-core/src/main/java/io/github/crabzilla/UnitOfWork.kt) resulting from a *Command* submission will be stored as JSON on the ```units_of_work``` table.
+* It leverages Vert.x HA mode: event projector is a cluster aware and fail safe singleton verticle.
 * It can be packaged as a native executable using [Quarkus](https://quarkus.io/)
-* It has a self-check of inconsistencies between read and write model on ```GET /inconsistencies``` route.
 
 ### Requirements
 
