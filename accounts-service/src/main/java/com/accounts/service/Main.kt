@@ -50,7 +50,7 @@ object Main {
               val nextFreeHttpPort = nextFreePort(httpPort, httpPort + 10)
               config.put("HTTP_PORT", nextFreeHttpPort)
               log.info("*** next free HTTP_PORT: $nextFreeHttpPort")
-              log.warn("*** Deploying app")
+              log.info("*** Deploying app")
               val projectionEndpoint = config.getString("PROJECTION_ENDPOINT")
               val appVerticle = AccountsVerticle::class.java.name
               haVertx.deployVerticle(appVerticle, dOpt) { wasDeployed ->
@@ -62,11 +62,11 @@ object Main {
                       log.info("No need to start app: " + isWorking.result().body())
                     } else {
                       val projectorVerticle = ProjectorVerticle::class.java.name
-                      log.warn("*** Deploying $projectorVerticle")
+                      log.info("*** Deploying $projectorVerticle")
                       haVertx.deployVerticle(projectorVerticle, dOpt) { wasDeployed ->
                         if (wasDeployed.succeeded()) {
                           val end2 = System.currentTimeMillis()
-                          log.info("$projectorVerticle started in " + (end2 - begin) + " ms")
+                          log.info("$projectorVerticle started in " + ((end1 + end2) - begin) + " ms")
                         } else {
                           log.error("$projectorVerticle not started", wasDeployed.cause())
                         }
