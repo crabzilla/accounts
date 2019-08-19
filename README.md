@@ -76,17 +76,34 @@ HTTP/1.1 200 OK
 transfer-encoding: chunked
 Content-Type: application/json
 uowId: 1
+```
 
-{"entityName":"account",
- "entityId":2001,
- "commandId":"09b53f1f-ba5b-40a6-8bff-c302bd8fca4a",
- "commandName":"make-deposit",
- "command":{"amount":10.0},
-  "version":1,
-  "events":[{"first":"AccountCreated",
-             "second":{"accountId":{"value":2001}}},
-            {"first":"AmountDeposited",
-             "second":{"amount":10.0}}]
+```json
+{  
+   "entityName":"account",
+   "entityId":2001,
+   "commandId":"09b53f1f-ba5b-40a6-8bff-c302bd8fca4a",
+   "commandName":"make-deposit",
+   "command":{  
+      "amount":10.0
+   },
+   "version":1,
+   "events":[  
+      {  
+         "first":"AccountCreated",
+         "second":{  
+            "accountId":{  
+               "value":2001
+            }
+         }
+      },
+      {  
+         "first":"AmountDeposited",
+         "second":{  
+            "amount":10.0
+         }
+      }
+   ]
 }
 ```
 then let's try to withdrawn $15 from that account #2001:
@@ -135,14 +152,26 @@ HTTP/1.1 200 OK
 transfer-encoding: chunked
 Content-Type: application/json
 uowId: 2
+```
 
-{"entityName":"account",
- "entityId":2001,
- "commandId":"5e07d0a0-c322-4964-a055-18a0de413526",
- "commandName":"make-withdraw",
- "command":{"amount":6.0},
-            "version":2,
-            "events":[{"first":"AmountWithdrawn","second":{"amount":6.0}}]
+```json
+{  
+   "entityName":"account",
+   "entityId":2001,
+   "commandId":"5e07d0a0-c322-4964-a055-18a0de413526",
+   "commandName":"make-withdraw",
+   "command":{  
+      "amount":6.0
+   },
+   "version":2,
+   "events":[  
+      {  
+         "first":"AmountWithdrawn",
+         "second":{  
+            "amount":6.0
+         }
+      }
+   ]
 }
 ```
 

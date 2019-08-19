@@ -8,6 +8,7 @@ import io.github.crabzilla.pgc.PgcComponent
 import io.github.crabzilla.webpgc.WebPgcCmdHandlerComponent
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
+import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
@@ -20,6 +21,7 @@ class AccountsVerticle : AbstractVerticle() {
     internal val log = getLogger(AccountsVerticle::class.java)
   }
 
+  private lateinit var server: HttpServer
   private lateinit var pgcComponent : PgcComponent
 
   override fun start(future: Future<Void>) {
@@ -45,7 +47,7 @@ class AccountsVerticle : AbstractVerticle() {
 
     // http server
     val httpPort = config.getInteger("HTTP_PORT")
-    val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
+    server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
     server.requestHandler(router).listen { startedFuture ->
       if (startedFuture.succeeded()) {
         log.info("Server started on port " + startedFuture.result().actualPort())
@@ -60,6 +62,7 @@ class AccountsVerticle : AbstractVerticle() {
 
   override fun stop(future: Future<Void>) {
     log.info("*** stopping")
+    server.close()
     pgcComponent.writeDb.close()
     pgcComponent.readDb.close()
     future.complete()
