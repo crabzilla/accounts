@@ -59,22 +59,35 @@ curl -i -X POST \
 the response should be similar to:
 
 ```
-HTTP/1.1 201 Created
-accept: application/vnd.crabzilla.unit-of-work+json
+HTTP/1.1 303 See Other
+accept: application/json
+Location: http://localhost:8081/accounts/units-of-work/1
+content-length: 0
+```
+following the redirect: 
+
+```
+curl -i -X GET http://localhost:8081/accounts/units-of-work/1
+```
+
+```
+HTTP/1.1 200 OK
+transfer-encoding: chunked
 Content-Type: application/json
-content-length: 268
+uowId: 1
 
 {"entityName":"account",
  "entityId":2001,
- "commandId":"6ca4cfe0-2382-49fd-8c9b-5365c98f805d",
+ "commandId":"09b53f1f-ba5b-40a6-8bff-c302bd8fca4a",
  "commandName":"make-deposit",
  "command":{"amount":10.0},
- "version":1,
- "events":[{"first":"AccountCreated","second":{"accountId":{"value":2001}}},
-           {"first":"AmountDeposited","second":{"amount":10.0}}]
+  "version":1,
+  "events":[{"first":"AccountCreated",
+             "second":{"accountId":{"value":2001}}},
+            {"first":"AmountDeposited",
+             "second":{"amount":10.0}}]
 }
 ```
-
 then let's try to withdrawn $15 from that account #2001:
 
 ```bash
@@ -108,23 +121,31 @@ curl -i -X POST \
 the result:
 
 ```
-HTTP/1.1 201 Created
-accept: application/vnd.crabzilla.unit-of-work+json
+HTTP/1.1 303 See Other
+accept: application/json
+Location: http://localhost:8081/accounts/units-of-work/2
+content-length: 0
+```
+
+following the redirect:
+
+```
+HTTP/1.1 200 OK
+transfer-encoding: chunked
 Content-Type: application/json
-content-length: 238
+uowId: 2
 
 {"entityName":"account",
  "entityId":2001,
- "commandId":"c690864a-79a0-460b-9c9f-9b66d478db89",
+ "commandId":"5e07d0a0-c322-4964-a055-18a0de413526",
  "commandName":"make-withdraw",
  "command":{"amount":6.0},
- "version":2,
- "events":[{"first":"AmountWithdrawn","second":{"amount":6.0}}]
+            "version":2,
+            "events":[{"first":"AmountWithdrawn","second":{"amount":6.0}}]
 }
-
 ```
 
-Now let's see this account full track:
+Now let's see this account full track (working in progress : there are some corrections to be made):
 
 ```bash
 curl -i -X GET \
