@@ -145,12 +145,11 @@ uowId: 2
 }
 ```
 
-Now let's see this account full track (working in progress : there are some corrections to be made):
+Now let's see this account full track:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8081/accounts/2001 \
-   -H 'accept: application/vnd.crabzilla.entity-tracking+json' \
+   http://localhost:8081/accounts/2001/units-of-work \
    -H 'cache-control: no-cache' 
 ```
 
@@ -163,63 +162,7 @@ Content-Type: application/json
 ```
 
 ```json
-{
-   "snapshot":{
-      "state":{
-         "accountId":{
-            "value":2001
-         },
-         "balance":4.0
-      },
-      "version":2
-   },
-   "units_of_work":[
-      {
-         "entityName":"account",
-         "entityId":2001,
-         "commandId":"6ca4cfe0-2382-49fd-8c9b-5365c98f805d",
-         "commandName":"make-deposit",
-         "command":{
-            "amount":10.0
-         },
-         "version":1,
-         "events":[
-            {
-               "first":"AccountCreated",
-               "second":{
-                  "accountId":{
-                     "value":2001
-                  }
-               }
-            },
-            {
-               "first":"AmountDeposited",
-               "second":{
-                  "amount":10.0
-               }
-            }
-         ]
-      },
-      {
-         "entityName":"account",
-         "entityId":2001,
-         "commandId":"c690864a-79a0-460b-9c9f-9b66d478db89",
-         "commandName":"make-withdraw",
-         "command":{
-            "amount":6.0
-         },
-         "version":2,
-         "events":[
-            {
-               "first":"AmountWithdrawn",
-               "second":{
-                  "amount":6.0
-               }
-            }
-         ]
-      }
-   ]
-}
+[{"entityName":"account","entityId":2001,"commandId":"09b53f1f-ba5b-40a6-8bff-c302bd8fca4a","commandName":"make-deposit","command":{"amount":10.0},"version":1,"events":[{"first":"AccountCreated","second":{"accountId":{"value":2001}}},{"first":"AmountDeposited","second":{"amount":10.0}}]},{"entityName":"account","entityId":2001,"commandId":"5e07d0a0-c322-4964-a055-18a0de413526","commandName":"make-withdraw","command":{"amount":6.0},"version":2,"events":[{"first":"AmountWithdrawn","second":{"amount":6.0}}]}]
 ```
 
 Finally, let's see how is the account read model:
@@ -235,13 +178,12 @@ returning:
 ```
 HTTP/1.1 200 OK
 Content-Type: application/json
-content-length: 36
+content-length: 44
 
 {
-  "id" : 2001,
-  "balance" : 4.0
-}
-```
+  "accountId" : 2001,
+  "balance" : 4.00
+}```
 
 ## Developer's use cases
 
