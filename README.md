@@ -18,7 +18,7 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 
 #### Technical
 
-* The [UnitOfWork](https://github.com/crabzilla/crabzilla/blob/master/crabzilla-core/src/main/java/io/github/crabzilla/UnitOfWork.kt) resulting from a ```Command``` successful submission will be stored as JSON on the ```units_of_work``` table.
+* The [UnitOfWork](https://github.com/crabzilla/crabzilla/blob/master/crabzilla-core/src/main/java/io/github/crabzilla/UnitOfWork.kt) resulting from a ```Command``` successful submission will be stored as JSON on the [units_of_work](https://github.com/crabzilla/accounts/blob/2493094caa9f77d931f87fe1b7c183463ea903c1/docker-entrypoint-initdb.d/example1_database.sql#L22) table.
 * It leverages Vert.x HA mode: event projector is a cluster aware and fail safe singleton verticle.
 * It can be packaged as a native executable using [Quarkus](https://quarkus.io/)
 
