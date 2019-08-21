@@ -79,7 +79,7 @@ class ErrorScenariosIT {
         DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config);
         WebClientOptions wco = new WebClientOptions();
         client = WebClient.create(vertx, wco);
-        vertx.deployVerticle(AccountsVerticle.class, deploymentOptions, deploy -> {
+        vertx.deployVerticle(WebRoutesVerticle.class, deploymentOptions, deploy -> {
           if (deploy.succeeded()) {
             tc.completeNow();
           } else {

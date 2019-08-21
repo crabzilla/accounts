@@ -8,12 +8,12 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import org.slf4j.LoggerFactory.getLogger
 
-class ProjectorVerticle : AbstractVerticle() {
+class DbProjectionsVerticle : AbstractVerticle() {
 
   private lateinit var pgcComponent : PgcComponent
 
   companion object {
-    internal val log = getLogger(ProjectorVerticle::class.java)
+    internal val log = getLogger(DbProjectionsVerticle::class.java)
   }
 
   override fun start(startFuture: Future<Void>) {

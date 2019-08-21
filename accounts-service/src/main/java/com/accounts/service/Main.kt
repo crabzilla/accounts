@@ -5,9 +5,7 @@ import io.github.crabzilla.pgc.whoIsRunningProjection
 import io.vertx.config.ConfigRetriever
 import io.vertx.config.ConfigRetrieverOptions
 import io.vertx.config.ConfigStoreOptions
-import io.vertx.core.DeploymentOptions
-import io.vertx.core.Vertx
-import io.vertx.core.VertxOptions
+import io.vertx.core.*
 import io.vertx.core.eventbus.EventBusOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.spi.cluster.hazelcast.ConfigUtil
@@ -27,63 +25,39 @@ object Main {
   fun main(args: Array<String>) {
 
     val processId = ManagementFactory.getRuntimeMXBean().name
-    val begin = System.currentTimeMillis()
 
     val hzConfig = ConfigUtil.loadConfig()
     val mgr = HazelcastClusterManager(hzConfig)
     val eventBusOptions = EventBusOptions().setClustered(true)
     val vertxOptions = VertxOptions().setClusterManager(mgr).setHAEnabled(true).setEventBusOptions(eventBusOptions)
 
-    val dOpt = DeploymentOptions().setHa(true)
-
     Vertx.clusteredVertx(vertxOptions) { gotCluster ->
-      run {
-        if (gotCluster.succeeded()) {
-          val haVertx = gotCluster.result()
-          haVertx.initCrabzilla()
-          configRetriever(haVertx, CONFIG_PATH).getConfig { gotConfig ->
-            if (gotConfig.succeeded()) {
-              val config = gotConfig.result()
-              log.info("*** config:\n${config.encodePrettily()}")
-              dOpt.config = config
-              val httpPort = config.getInteger("HTTP_PORT")
-              val nextFreeHttpPort = nextFreePort(httpPort, httpPort + 10)
-              config.put("HTTP_PORT", nextFreeHttpPort)
-              log.info("*** next free HTTP_PORT: $nextFreeHttpPort")
-              log.info("*** Deploying app")
-              val projectionEndpoint = config.getString("PROJECTION_ENDPOINT")
-              val appVerticle = AccountsVerticle::class.java.name
-              haVertx.deployVerticle(appVerticle, dOpt) { wasDeployed ->
-                if (wasDeployed.succeeded()) {
-                  val end1 = System.currentTimeMillis()
-                  log.info("$appVerticle started in " + (end1 - begin) + " ms")
-                  haVertx.eventBus().send<Any>(whoIsRunningProjection(projectionEndpoint), processId) { isWorking ->
-                    if (isWorking.succeeded()) {
-                      log.info("No need to start app: " + isWorking.result().body())
-                    } else {
-                      val projectorVerticle = ProjectorVerticle::class.java.name
-                      log.info("*** Deploying $projectorVerticle")
-                      haVertx.deployVerticle(projectorVerticle, dOpt) { wasDeployed ->
-                        if (wasDeployed.succeeded()) {
-                          val end2 = System.currentTimeMillis()
-                          log.info("$projectorVerticle started in " + ((end1 + end2) - begin) + " ms")
-                        } else {
-                          log.error("$projectorVerticle not started", wasDeployed.cause())
-                        }
-                      }
-                    }
-                  }
+      if (gotCluster.succeeded()) {
+        val vertx = gotCluster.result()
+        vertx.initCrabzilla()
+        getConfig(vertx).setHandler { gotConfig ->
+          if (gotConfig.succeeded()) {
+            val config = gotConfig.result()
+            val deploymentOptions = DeploymentOptions().setHa(true).setConfig(config)
+            val dbProjectionsEndpoint = whoIsRunningProjection(config.getString("PROJECTION_ENDPOINT"))
+            CompositeFuture.all(
+              deploy(vertx, WebRoutesVerticle::class.java.name, deploymentOptions),
+              deploy(vertx, UIProjectionsVerticle::class.java.name, deploymentOptions),
+              deploySingletonVerticle(vertx, DbProjectionsVerticle::class.java.name, dbProjectionsEndpoint,
+                      deploymentOptions, processId))
+              .setHandler { deploys ->
+                if (deploys.succeeded()) {
+                  log.info("Verticles were successfully deployed")
                 } else {
-                  log.error("$appVerticle not started", wasDeployed.cause())
+                  log.error("When deploying", deploys.cause())
                 }
               }
-            } else {
-              log.error("Config error", gotConfig.cause())
-            }
+          } else {
+            log.error("Failed to get config", gotConfig.cause())
           }
-        } else {
-          log.error("Failed to get HA mode", gotCluster.cause())
         }
+      } else {
+        log.error("Failed to get HA mode", gotCluster.cause())
       }
     }
 
@@ -121,6 +95,53 @@ object Main {
     } catch (e: IOException) {
       false
     }
+  }
+
+  private fun deploy(vertx: Vertx, verticle: String, deploymentOptions: DeploymentOptions): Future<String> {
+    val future: Future<String> = Future.future()
+    vertx.deployVerticle(verticle, deploymentOptions, future)
+    return future
+  }
+
+  private fun deploySingletonVerticle(vertx: Vertx, verticle: String, pingEndpoint: String,
+                                      dOpt: DeploymentOptions,
+                                      processId: Any): Future<String> {
+    val future: Future<String> = Future.future()
+    vertx.eventBus().send<Any>(pingEndpoint, processId) { isWorking ->
+      if (isWorking.succeeded()) {
+        log.info("No need to start $verticle: " + isWorking.result().body())
+      } else {
+        log.info("*** Deploying $verticle")
+        vertx.deployVerticle(verticle, dOpt) { wasDeployed ->
+          if (wasDeployed.succeeded()) {
+            log.info("$verticle started")
+            future.complete(wasDeployed.result())
+          } else {
+            log.error("$verticle not started", wasDeployed.cause())
+            future.fail(wasDeployed.cause())
+          }
+        }
+      }
+    }
+    return future
+  }
+
+  private fun getConfig(vertx: Vertx) : Future<JsonObject> {
+    val future: Future<JsonObject> = Future.future()
+    configRetriever(vertx, CONFIG_PATH).getConfig { gotConfig ->
+      if (gotConfig.succeeded()) {
+        val config = gotConfig.result()
+        log.info("*** config:\n${config.encodePrettily()}")
+        val httpPort = config.getInteger("HTTP_PORT")
+        val nextFreeHttpPort = nextFreePort(httpPort, httpPort + 20)
+        config.put("HTTP_PORT", nextFreeHttpPort)
+        log.info("*** next free HTTP_PORT: $nextFreeHttpPort")
+        future.complete(config)
+      } else {
+        future.fail(gotConfig.cause())
+      }
+    }
+    return future
   }
 
 }

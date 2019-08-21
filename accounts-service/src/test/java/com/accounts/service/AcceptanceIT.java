@@ -82,9 +82,9 @@ class AcceptanceIT {
         DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config);
         WebClientOptions wco = new WebClientOptions();
         client = WebClient.create(vertx, wco);
-        vertx.deployVerticle(AccountsVerticle.class, deploymentOptions, deploy1 -> {
+        vertx.deployVerticle(WebRoutesVerticle.class, deploymentOptions, deploy1 -> {
           if (deploy1.succeeded()) {
-            vertx.deployVerticle(ProjectorVerticle.class, deploymentOptions, deploy2 -> {
+            vertx.deployVerticle(DbProjectionsVerticle.class, deploymentOptions, deploy2 -> {
               if (deploy2.succeeded()) {
                 PgPool read = readModelPgPool(vertx, config);
                 PgPool write = writeModelPgPool(vertx, config);
