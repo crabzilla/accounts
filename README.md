@@ -1,4 +1,6 @@
-# Accounts
+[![Build Status](https://travis-ci.org/crabzilla/crabzilla.svg?branch=master)](https://travis-ci.org/crabzilla/crabzilla)
+
+# Crabzilla Accounts Example
 
 ### Overview
 
