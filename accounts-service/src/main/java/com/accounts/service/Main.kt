@@ -1,6 +1,5 @@
 package com.accounts.service
 
-import io.github.crabzilla.initCrabzilla
 import io.github.crabzilla.pgc.deploy
 import io.github.crabzilla.pgc.deploySingleton
 import io.github.crabzilla.pgc.getConfig
@@ -33,7 +32,6 @@ object Main {
     Vertx.clusteredVertx(vertxOptions) { gotCluster ->
       if (gotCluster.succeeded()) {
         val vertx = gotCluster.result()
-        vertx.initCrabzilla()
         getConfig(vertx, CONFIG_PATH).setHandler { gotConfig ->
           if (gotConfig.succeeded()) {
             val config = gotConfig.result()

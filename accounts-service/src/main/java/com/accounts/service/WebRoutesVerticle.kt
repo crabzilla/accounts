@@ -2,8 +2,10 @@ package com.accounts.service
 
 import com.accounts.model.AccountCmdAware
 import com.accounts.model.AccountJsonAware
-import com.accounts.service.model.read.AccountsRepositoryImpl
-import com.accounts.service.model.read.AccountsWebHandlers
+import com.accounts.service.reports.AccountsRepositoryImpl
+import com.accounts.service.reports.AccountsWebHandlers
+import com.accounts.service.reports.ConsistencyRepository
+import com.accounts.service.reports.ConsistencyWebHandlers
 import io.github.crabzilla.pgc.PgcComponent
 import io.github.crabzilla.webpgc.WebPgcCmdHandlerComponent
 import io.vertx.core.AbstractVerticle

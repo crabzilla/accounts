@@ -1,4 +1,4 @@
-package com.accounts.service
+package com.accounts.service.reports
 
 import io.vertx.core.Handler
 import io.vertx.ext.web.RoutingContext
