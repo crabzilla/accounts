@@ -4,14 +4,14 @@ import com.accounts.model.AccountCreated
 import com.accounts.model.AmountDeposited
 import com.accounts.model.AmountWithdrawn
 import io.github.crabzilla.DomainEvent
-import io.github.crabzilla.pgc.PgcDbProjectionsVerticle
 import io.github.crabzilla.pgc.PgcEventProjector
 import io.github.crabzilla.pgc.runPreparedQuery
+import io.github.crabzilla.webpgc.DbProjectionsVerticle
 import io.reactiverse.pgclient.PgTransaction
 import io.reactiverse.pgclient.Tuple
 import io.vertx.core.Future
 
-class DbProjectionsVerticle : PgcDbProjectionsVerticle() {
+open class AccountsDbPjcVerticle : DbProjectionsVerticle() {
 
   override fun start(startFuture: Future<Void>) {
     super.start(startFuture)
@@ -21,7 +21,7 @@ class DbProjectionsVerticle : PgcDbProjectionsVerticle() {
 
 }
 
-class AccountsSummaryProjector : PgcEventProjector {
+private class AccountsSummaryProjector : PgcEventProjector {
 
   override fun handle(pgTx: PgTransaction, targetId: Int, event: DomainEvent): Future<Void> {
     val future: Future<Void> = Future.future()

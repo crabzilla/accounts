@@ -1,8 +1,8 @@
 package com.accounts.service
 
-import io.github.crabzilla.pgc.deploy
-import io.github.crabzilla.pgc.deploySingleton
-import io.github.crabzilla.pgc.getConfig
+import io.github.crabzilla.webpgc.DeploymentConventions.deploy
+import io.github.crabzilla.webpgc.DeploymentConventions.deploySingleton
+import io.github.crabzilla.webpgc.DeploymentConventions.getConfig
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
@@ -38,9 +38,9 @@ object Main {
             val deploymentOptions = DeploymentOptions().setHa(true).setConfig(config)
             val dbProjectionsEndpoint = config.getString("PROJECTION_ENDPOINT")
             CompositeFuture.all(
-              deploy(vertx, WebRoutesVerticle::class.java.name, deploymentOptions),
-              deploy(vertx, UIProjectionsVerticle::class.java.name, deploymentOptions),
-              deploySingleton(vertx, DbProjectionsVerticle::class.java.name, dbProjectionsEndpoint,
+              deploy(vertx, AcctsWebVerticle::class.java.name, deploymentOptions),
+              deploy(vertx, AcctsUIPjcVerticle::class.java.name, deploymentOptions),
+              deploySingleton(vertx, AccountsDbPjcVerticle::class.java.name, dbProjectionsEndpoint,
                       deploymentOptions, processId))
               .setHandler { deploys ->
                 if (deploys.succeeded()) {

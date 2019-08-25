@@ -111,12 +111,6 @@
 
         <dependency>
             <groupId>${crabzilla.group.id}</groupId>
-            <artifactId>crabzilla-web</artifactId>
-            <version>${crabzilla.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>${crabzilla.group.id}</groupId>
             <artifactId>crabzilla-webpgc</artifactId>
             <version>${crabzilla.version}</version>
         </dependency>

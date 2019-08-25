@@ -1,9 +1,9 @@
 package com.accounts.service;
 
 import com.accounts.model.MakeDeposit;
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
+import io.github.crabzilla.webpgc.DeploymentConventions;
+import io.reactiverse.pgclient.PgPool;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -14,10 +14,7 @@ import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +23,8 @@ import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import static io.github.crabzilla.CrabzillaKt.initCrabzilla;
+import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
+import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -35,18 +33,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(VertxExtension.class)
 class ErrorScenariosIT {
 
-  private static final Random random = new Random();
-  private static final Logger log = LoggerFactory.getLogger(ErrorScenariosIT.class);
-  private static WebClient client;
-  private static int port;
-
   static {
     System.setProperty(io.vertx.core.logging.LoggerFactory.LOGGER_DELEGATE_FACTORY_CLASS_NAME,
             SLF4JLogDelegateFactory.class.getName());
     LoggerFactory.getLogger(io.vertx.core.logging.LoggerFactory.class);// Required for Logback to work in Vertx
   }
 
-  private static int httpPort() {
+  private static final Logger log = LoggerFactory.getLogger(ErrorScenariosIT.class);
+  private static final Random random = new Random();
+  private static WebClient client;
+
+  private static int port = findFreeHttpPort();
+  private static int findFreeHttpPort() {
     int httpPort = 0;
     try {
       ServerSocket socket = new ServerSocket(0);
@@ -58,49 +56,62 @@ class ErrorScenariosIT {
     return httpPort;
   }
 
-
-  static private ConfigRetriever configRetriever(Vertx vertx, String configFile) {
-    ConfigStoreOptions envOptions = new ConfigStoreOptions()
-            .setType("file")
-            .setFormat("properties")
-            .setConfig(new JsonObject().put("path", configFile));
-    ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(envOptions);
-    return ConfigRetriever.create(vertx, options);
-  }
-
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
-    initCrabzilla(vertx);
-    port = httpPort();
-    configRetriever(vertx, "./../accounts.env").getConfig(gotConfig -> {
-      if (gotConfig.succeeded()) {
+    DeploymentConventions.INSTANCE.getConfig(vertx,  "./../accounts.env")
+      .setHandler(gotConfig -> {
+        if (gotConfig.failed()) {
+          tc.failNow(gotConfig.cause());
+          return;
+        }
         JsonObject config = gotConfig.result();
         config.put("HTTP_PORT", port);
-        DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config);
+        DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
         WebClientOptions wco = new WebClientOptions();
         client = WebClient.create(vertx, wco);
-        vertx.deployVerticle(WebRoutesVerticle.class, deploymentOptions, deploy -> {
-          if (deploy.succeeded()) {
-            tc.completeNow();
-          } else {
-            deploy.cause().printStackTrace();
-            tc.failNow(deploy.cause());
+        CompositeFuture.all(
+          DeploymentConventions.INSTANCE.deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
+          DeploymentConventions.INSTANCE.deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions))
+          .setHandler(deploy ->  {
+            if (deploy.succeeded()) {
+              PgPool read = readModelPgPool(vertx, config);
+              PgPool write = writeModelPgPool(vertx, config);
+              write.query("delete from units_of_work", event1 -> {
+                if (event1.failed()) {
+                  tc.failNow(event1.cause());
+                  return;
+                }
+                write.query("delete from account_snapshots", event2 -> {
+                  if (event2.failed()) {
+                    tc.failNow(event2.cause());
+                    return;
+                  }
+                  read.query("delete from account_summary", event3 -> {
+                    if (event3.failed()) {
+                      tc.failNow(event3.cause());
+                      return;
+                    }
+                    tc.completeNow();
+                  });
+                });
+              });
+            } else {
+              deploy.cause().printStackTrace();
+              tc.failNow(deploy.cause());
+            }
           }
-        });
-      } else {
-        tc.failNow(gotConfig.cause());
+        );
       }
-    });
-
+    );
   }
 
   @Nested
   @DisplayName("When GET to on a missing account")
-  class When6 {
+  class When11 {
 
     @Test
     @DisplayName("You get a 404")
-    void a7(VertxTestContext tc) {
+    void a11(VertxTestContext tc) {
       client.get(port, "0.0.0.0", "/accounts/" + random.nextInt())
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_NOT_FOUND)
@@ -117,11 +128,11 @@ class ErrorScenariosIT {
 
   @Nested
   @DisplayName("When GET to on a invalid account (ID not a number)")
-  class When7 {
+  class When12 {
 
     @Test
     @DisplayName("You get a 400")
-    void a7(VertxTestContext tc) {
+    void a12(VertxTestContext tc) {
       client.get(port, "0.0.0.0", "/accounts/dd")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
@@ -136,10 +147,10 @@ class ErrorScenariosIT {
 
   @Nested
   @DisplayName("When making a $10 deposit on an invalid account (ID not a number)")
-  class When8 {
+  class When13 {
     @Test
     @DisplayName("You get a 400")
-    void a1(VertxTestContext tc) {
+    void a13(VertxTestContext tc) {
       MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
       client.post(port, "0.0.0.0", "/accounts/NOT_A_NUMBER/commands/make-deposit")
@@ -156,10 +167,10 @@ class ErrorScenariosIT {
 
   @Nested
   @DisplayName("When GET to an invalid UnitOfWork (bad number)")
-  class When9 {
+  class When14 {
     @Test
     @DisplayName("You get a 400")
-    void a1(VertxTestContext tc) {
+    void a14(VertxTestContext tc) {
       client.get(port, "0.0.0.0", "/accounts/units-of-work/dddd")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)

@@ -7,10 +7,10 @@ import io.vertx.core.Future
 import io.vertx.core.json.JsonObject
 import org.slf4j.LoggerFactory.getLogger
 
-class UIProjectionsVerticle : AbstractVerticle() {
+class AcctsUIPjcVerticle : AbstractVerticle() {
 
   companion object {
-    internal val log = getLogger(UIProjectionsVerticle::class.java)
+    internal val log = getLogger(AcctsUIPjcVerticle::class.java)
   }
 
   override fun start(startFuture: Future<Void>) {
