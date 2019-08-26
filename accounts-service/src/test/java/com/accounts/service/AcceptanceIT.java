@@ -2,7 +2,6 @@ package com.accounts.service;
 
 import com.accounts.model.MakeDeposit;
 import com.accounts.model.MakeWithdraw;
-import io.github.crabzilla.webpgc.DeploymentConventions;
 import io.reactiverse.pgclient.PgPool;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
@@ -28,6 +27,8 @@ import java.util.Random;
 import static io.github.crabzilla.UnitOfWork.JsonMetadata.*;
 import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
 import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
+import static io.github.crabzilla.webpgc.WebpgcKt.deploy;
+import static io.github.crabzilla.webpgc.WebpgcKt.getConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -62,7 +63,7 @@ class AcceptanceIT {
 
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
-    DeploymentConventions.INSTANCE.getConfig(vertx,  "./../accounts.env")
+    getConfig(vertx,  "./../accounts.env")
         .setHandler(gotConfig -> {
           if (gotConfig.failed()) {
             tc.failNow(gotConfig.cause());
@@ -74,39 +75,39 @@ class AcceptanceIT {
           WebClientOptions wco = new WebClientOptions();
           client = WebClient.create(vertx, wco);
           CompositeFuture.all(
-            DeploymentConventions.INSTANCE.deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
-            DeploymentConventions.INSTANCE.deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions))
-            .setHandler(deploy ->  {
-              if (deploy.succeeded()) {
-                PgPool read = readModelPgPool(vertx, config);
-                PgPool write = writeModelPgPool(vertx, config);
-                write.query("delete from units_of_work", event1 -> {
-                  if (event1.failed()) {
-                    tc.failNow(event1.cause());
+            deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
+            deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions)
+          ).setHandler(deploy ->  {
+            if (deploy.succeeded()) {
+              PgPool read = readModelPgPool(vertx, config);
+              PgPool write = writeModelPgPool(vertx, config);
+              write.query("delete from units_of_work", event1 -> {
+                if (event1.failed()) {
+                  tc.failNow(event1.cause());
+                  return;
+                }
+                write.query("delete from account_snapshots", event2 -> {
+                  if (event2.failed()) {
+                    tc.failNow(event2.cause());
                     return;
                   }
-                  write.query("delete from account_snapshots", event2 -> {
-                    if (event2.failed()) {
-                      tc.failNow(event2.cause());
+                  read.query("delete from account_summary", event3 -> {
+                    if (event3.failed()) {
+                      tc.failNow(event3.cause());
                       return;
                     }
-                    read.query("delete from account_summary", event3 -> {
-                      if (event3.failed()) {
-                        tc.failNow(event3.cause());
-                        return;
-                      }
-                      tc.completeNow();
-                    });
+                    tc.completeNow();
                   });
                 });
-              } else {
-                deploy.cause().printStackTrace();
-                tc.failNow(deploy.cause());
-              }
+              });
+            } else {
+              deploy.cause().printStackTrace();
+              tc.failNow(deploy.cause());
             }
-          );
-        }
-      );
+          }
+        );
+      }
+    );
   }
 
   @Nested

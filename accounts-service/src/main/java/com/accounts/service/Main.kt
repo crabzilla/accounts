@@ -1,8 +1,8 @@
 package com.accounts.service
 
-import io.github.crabzilla.webpgc.DeploymentConventions.deploy
-import io.github.crabzilla.webpgc.DeploymentConventions.deploySingleton
-import io.github.crabzilla.webpgc.DeploymentConventions.getConfig
+import io.github.crabzilla.webpgc.deploy
+import io.github.crabzilla.webpgc.deploySingleton
+import io.github.crabzilla.webpgc.getConfig
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
@@ -28,7 +28,6 @@ object Main {
     val mgr = HazelcastClusterManager(hzConfig)
     val eventBusOptions = EventBusOptions().setClustered(true)
     val vertxOptions = VertxOptions().setClusterManager(mgr).setHAEnabled(true).setEventBusOptions(eventBusOptions)
-
     Vertx.clusteredVertx(vertxOptions) { gotCluster ->
       if (gotCluster.succeeded()) {
         val vertx = gotCluster.result()
@@ -44,7 +43,22 @@ object Main {
                       deploymentOptions, processId))
               .setHandler { deploys ->
                 if (deploys.succeeded()) {
+                  val deploymentIds = deploys.result().list<String>()
                   log.info("Verticles were successfully deployed")
+                  Runtime.getRuntime().addShutdownHook(object : Thread() {
+                    override fun run() {
+                      for (id in deploymentIds) {
+                        if (id.startsWith("singleton")) {
+                          log.info("Keeping singleton deployment $id")
+                        } else {
+                          log.info("Undeploying $id")
+                          vertx.undeploy(id)
+                        }
+                      }
+                      log.info("Closing vertx")
+                      vertx.close()
+                    }
+                  })
                 } else {
                   log.error("When deploying", deploys.cause())
                 }

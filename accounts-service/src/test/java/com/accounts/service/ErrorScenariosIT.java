@@ -1,7 +1,6 @@
 package com.accounts.service;
 
 import com.accounts.model.MakeDeposit;
-import io.github.crabzilla.webpgc.DeploymentConventions;
 import io.reactiverse.pgclient.PgPool;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
@@ -25,6 +24,8 @@ import java.util.Random;
 
 import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
 import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
+import static io.github.crabzilla.webpgc.WebpgcKt.deploy;
+import static io.github.crabzilla.webpgc.WebpgcKt.getConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -58,7 +59,7 @@ class ErrorScenariosIT {
 
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
-    DeploymentConventions.INSTANCE.getConfig(vertx,  "./../accounts.env")
+    getConfig(vertx,  "./../accounts.env")
       .setHandler(gotConfig -> {
         if (gotConfig.failed()) {
           tc.failNow(gotConfig.cause());
@@ -70,8 +71,8 @@ class ErrorScenariosIT {
         WebClientOptions wco = new WebClientOptions();
         client = WebClient.create(vertx, wco);
         CompositeFuture.all(
-          DeploymentConventions.INSTANCE.deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
-          DeploymentConventions.INSTANCE.deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions))
+          deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
+          deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions))
           .setHandler(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);

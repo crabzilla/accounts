@@ -11,8 +11,8 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 
 #### Business
 
-* ```POST /accounts/${id}/commands/make-deposit``` to make a deposit (and create an account if needed) 
-* ```POST /accounts/${id}/commands/make-withdraw``` to make a withdraw
+* ```POST /accounts/:entityId/commands/make-deposit``` to make a deposit (and create an account if needed) 
+* ```POST /accounts/:entityId/commands/make-withdraw``` to make a withdraw
 * ```GET /index.html``` to see events published to UI
 * ```GET /inconsistencies``` to see a self-check of inconsistencies between read and write models.
 * Transfer between accounts (TODO using a Saga)

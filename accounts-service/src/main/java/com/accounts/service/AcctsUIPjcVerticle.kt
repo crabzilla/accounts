@@ -1,7 +1,6 @@
 package com.accounts.service
 
 
-import io.github.crabzilla.UnitOfWorkEvents
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.json.JsonObject
@@ -14,10 +13,9 @@ class AcctsUIPjcVerticle : AbstractVerticle() {
   }
 
   override fun start(startFuture: Future<Void>) {
-    vertx.eventBus().consumer<UnitOfWorkEvents>(config().getString("PROJECTION_ENDPOINT")) { message ->
-      val events = message.body()
-      val asJson = JsonObject.mapFrom(events)
-      vertx.eventBus().publish(config().getString("UI_PROJECTION_ENDPOINT"), asJson.encodePrettily())
+    vertx.eventBus().consumer<String>(config().getString("PROJECTION_ENDPOINT")) { message ->
+      val eventsAsJson = JsonObject(message.body())
+      vertx.eventBus().publish(config().getString("UI_PROJECTION_ENDPOINT"), eventsAsJson.encodePrettily())
     }
     startFuture.complete()
   }
