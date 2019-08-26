@@ -7,6 +7,8 @@
 This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/). 
 I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design
 
+![Architecture](https://crabzilla.github.io/accounts/accounts-service/crabzilla-accts.png)
+
 ### Features
 
 #### Business
