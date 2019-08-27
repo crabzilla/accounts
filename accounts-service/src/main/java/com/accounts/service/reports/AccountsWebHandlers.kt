@@ -1,4 +1,4 @@
-package com.accounts.service.model.read
+package com.accounts.service.reports
 
 import com.accounts.model.AccountsRepository
 import io.vertx.core.Handler

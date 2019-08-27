@@ -5,14 +5,17 @@
 ### Overview
 
 This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/). 
-I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design
+I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design But this is not a microservice based app: instead, let's call it an 
+Event Sourced monolith.
+
+![Architecture](crabzilla-accts.png)
 
 ### Features
 
 #### Business
 
-* ```POST /accounts/${id}/commands/make-deposit``` to make a deposit (and create an account if needed) 
-* ```POST /accounts/${id}/commands/make-withdraw``` to make a withdraw
+* ```POST /accounts/:entityId/commands/make-deposit``` to make a deposit (and create an account if needed) 
+* ```POST /accounts/:entityId/commands/make-withdraw``` to make a withdraw
 * ```GET /index.html``` to see events published to UI
 * ```GET /inconsistencies``` to see a self-check of inconsistencies between read and write models.
 * Transfer between accounts (TODO using a Saga)

@@ -3,9 +3,7 @@ package com.accounts.service;
 import com.accounts.model.MakeDeposit;
 import com.accounts.model.MakeWithdraw;
 import io.reactiverse.pgclient.PgPool;
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -26,10 +24,11 @@ import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import static io.github.crabzilla.CrabzillaKt.initCrabzilla;
 import static io.github.crabzilla.UnitOfWork.JsonMetadata.*;
 import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
 import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
+import static io.github.crabzilla.webpgc.WebpgcKt.deploy;
+import static io.github.crabzilla.webpgc.WebpgcKt.getConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -40,7 +39,6 @@ class AcceptanceIT {
 
   private static final Logger log = LoggerFactory.getLogger(AcceptanceIT.class);
   private static WebClient client;
-  private static int port;
   private static final Random random = new Random();
   private static int randomAcctId = random.nextInt();
 
@@ -50,7 +48,8 @@ class AcceptanceIT {
     LoggerFactory.getLogger(io.vertx.core.logging.LoggerFactory.class);// Required for Logback to work in Vertx
   }
 
-  private static int httpPort() {
+  private static int port = findFreeHttpPort();
+  private static int findFreeHttpPort() {
     int httpPort = 0;
     try {
       ServerSocket socket = new ServerSocket(0);
@@ -62,64 +61,53 @@ class AcceptanceIT {
     return httpPort;
   }
 
-  private static ConfigRetriever configRetriever(Vertx vertx, String configFile) {
-    ConfigStoreOptions envOptions = new ConfigStoreOptions()
-            .setType("file")
-            .setFormat("properties")
-            .setConfig(new JsonObject().put("path", configFile));
-    ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(envOptions);
-    return ConfigRetriever.create(vertx, options);
-  }
-
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
-    initCrabzilla(vertx);
-    port = httpPort();
-    configRetriever(vertx, "./../accounts.env").getConfig(gotConfig -> {
-      if (gotConfig.succeeded()) {
-        JsonObject config = gotConfig.result();
-        config.put("HTTP_PORT", port);
-        DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config);
-        WebClientOptions wco = new WebClientOptions();
-        client = WebClient.create(vertx, wco);
-        vertx.deployVerticle(WebRoutesVerticle.class, deploymentOptions, deploy1 -> {
-          if (deploy1.succeeded()) {
-            vertx.deployVerticle(DbProjectionsVerticle.class, deploymentOptions, deploy2 -> {
-              if (deploy2.succeeded()) {
-                PgPool read = readModelPgPool(vertx, config);
-                PgPool write = writeModelPgPool(vertx, config);
-                write.query("delete from units_of_work", event1 -> {
-                  if (event1.failed()) {
-                    tc.failNow(event1.cause());
+    getConfig(vertx,  "./../accounts.env")
+        .setHandler(gotConfig -> {
+          if (gotConfig.failed()) {
+            tc.failNow(gotConfig.cause());
+            return;
+          }
+          JsonObject config = gotConfig.result();
+          config.put("HTTP_PORT", port);
+          DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
+          WebClientOptions wco = new WebClientOptions();
+          client = WebClient.create(vertx, wco);
+          CompositeFuture.all(
+            deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
+            deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions)
+          ).setHandler(deploy ->  {
+            if (deploy.succeeded()) {
+              PgPool read = readModelPgPool(vertx, config);
+              PgPool write = writeModelPgPool(vertx, config);
+              write.query("delete from units_of_work", event1 -> {
+                if (event1.failed()) {
+                  tc.failNow(event1.cause());
+                  return;
+                }
+                write.query("delete from account_snapshots", event2 -> {
+                  if (event2.failed()) {
+                    tc.failNow(event2.cause());
                     return;
                   }
-                  write.query("delete from account_snapshots", event2 -> {
-                    if (event2.failed()) {
-                      tc.failNow(event2.cause());
+                  read.query("delete from account_summary", event3 -> {
+                    if (event3.failed()) {
+                      tc.failNow(event3.cause());
                       return;
                     }
-                    read.query("delete from account_summary", event3 -> {
-                      if (event3.failed()) {
-                        tc.failNow(event3.cause());
-                        return;
-                      }
-                      tc.completeNow();
-                    });
+                    tc.completeNow();
                   });
                 });
-              } else {
-                tc.failNow(deploy2.cause());
-              }
-            });
-          } else {
-            tc.failNow(deploy1.cause());
+              });
+            } else {
+              deploy.cause().printStackTrace();
+              tc.failNow(deploy.cause());
+            }
           }
-        });
-      } else {
-        tc.failNow(gotConfig.cause());
+        );
       }
-    });
-
+    );
   }
 
   @Nested
@@ -181,7 +169,7 @@ class AcceptanceIT {
     @Order(2)
     @DisplayName("You get account summary with balance = 10.00")
     void a2(VertxTestContext tc) {
-      
+
       client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
         .as(BodyCodec.jsonObject())
         .expect(ResponsePredicate.SC_SUCCESS)
@@ -201,7 +189,7 @@ class AcceptanceIT {
     @Order(3)
     @DisplayName("You get accounts with just this account")
     void a22(VertxTestContext tc) {
-      
+
       client.get(port, "0.0.0.0", "/accounts")
         .as(BodyCodec.jsonArray())
         .expect(ResponsePredicate.SC_SUCCESS)
@@ -270,7 +258,7 @@ class AcceptanceIT {
       @Order(2)
       @DisplayName("You get account summary with balance = 5.00")
       void a4(VertxTestContext tc) throws InterruptedException {
-        
+
         client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
           .as(BodyCodec.jsonObject())
           .expect(ResponsePredicate.SC_SUCCESS)
@@ -340,7 +328,7 @@ class AcceptanceIT {
         @Order(3)
         @DisplayName("You get account summary with balance = 6.00")
         void a7(VertxTestContext tc) throws InterruptedException {
-          
+
           client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
             .as(BodyCodec.jsonObject())
             .expect(ResponsePredicate.SC_SUCCESS)
@@ -380,7 +368,7 @@ class AcceptanceIT {
           @Order(2)
           @DisplayName("Your account summary keep with balance = 6.00")
           void a4(VertxTestContext tc) {
-            
+
             client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
               .as(BodyCodec.jsonObject())
               .expect(ResponsePredicate.SC_SUCCESS)

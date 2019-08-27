@@ -2,11 +2,11 @@ package com.accounts.service
 
 import com.accounts.model.AccountCmdAware
 import com.accounts.model.AccountJsonAware
-import com.accounts.service.model.read.AccountsRepositoryImpl
-import com.accounts.service.model.read.AccountsWebHandlers
-import io.github.crabzilla.pgc.PgcComponent
-import io.github.crabzilla.webpgc.WebPgcCmdHandlerComponent
-import io.vertx.core.AbstractVerticle
+import com.accounts.service.reports.AccountsRepositoryImpl
+import com.accounts.service.reports.AccountsWebHandlers
+import com.accounts.service.reports.ConsistencyRepository
+import com.accounts.service.reports.ConsistencyWebHandlers
+import io.github.crabzilla.webpgc.WebCmdHandlerVerticle
 import io.vertx.core.Future
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
@@ -19,14 +19,13 @@ import io.vertx.ext.web.handler.sockjs.BridgeOptions
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import org.slf4j.LoggerFactory.getLogger
 
-class WebRoutesVerticle : AbstractVerticle() {
+class AcctsWebVerticle : WebCmdHandlerVerticle() {
 
   companion object {
-    internal val log = getLogger(WebRoutesVerticle::class.java)
+    internal val log = getLogger(AcctsWebVerticle::class.java)
   }
 
   private lateinit var server: HttpServer
-  private lateinit var pgcComponent : PgcComponent
 
   override fun start(future: Future<Void>) {
 
@@ -38,15 +37,13 @@ class WebRoutesVerticle : AbstractVerticle() {
     router.route().handler(BodyHandler.create())
 
     // command routes
-    pgcComponent = PgcComponent(vertx, config)
-    val webCmdHandlerComponent = WebPgcCmdHandlerComponent(pgcComponent, router)
-    webCmdHandlerComponent.addCommandHandler("account", AccountJsonAware(), AccountCmdAware(), "accounts")
+    addResourceForEntity("accounts", "account", AccountJsonAware(), AccountCmdAware(), router)
 
     // reports routes
-    val accountHandlers = AccountsWebHandlers(AccountsRepositoryImpl(pgcComponent.readDb))
+    val accountHandlers = AccountsWebHandlers(AccountsRepositoryImpl(readDb))
     router.get("/accounts/:id").handler { rc -> accountHandlers.account(rc) }
     router.get("/accounts").handler { rc -> accountHandlers.allAccounts(rc) }
-    val consistencyHandler = ConsistencyWebHandlers(ConsistencyRepository(pgcComponent.readDb))
+    val consistencyHandler = ConsistencyWebHandlers(ConsistencyRepository(readDb))
     router.get("/inconsistencies").handler { rc -> consistencyHandler.inconsistencies(rc) }
 
     // eventBus to browser
@@ -73,14 +70,6 @@ class WebRoutesVerticle : AbstractVerticle() {
       }
     }
 
-  }
-
-  override fun stop(future: Future<Void>) {
-    log.info("*** stopping")
-    server.close()
-    pgcComponent.writeDb.close()
-    pgcComponent.readDb.close()
-    future.complete()
   }
 
 }

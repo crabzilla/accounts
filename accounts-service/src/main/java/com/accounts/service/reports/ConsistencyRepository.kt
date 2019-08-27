@@ -1,4 +1,4 @@
-package com.accounts.service
+package com.accounts.service.reports
 
 import io.reactiverse.pgclient.PgPool
 import io.vertx.core.AsyncResult
