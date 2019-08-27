@@ -9,7 +9,12 @@ import io.vertx.ext.web.RoutingContext
 class AccountsWebHandlers(private val accountRepo: AccountsRepository) {
 
   fun account(rc: RoutingContext) {
-    val accountId = rc.pathParam("id").toInt()
+    val accountId = try { rc.pathParam("id").toInt() } catch (e: Exception) {
+      rc.response().putHeader("Content-Type", "application/json")
+              .setStatusCode(400)
+              .end("path param entityId must be a number")
+      return
+    }
     accountRepo.accountById(accountId, Handler { event ->
       if (event.failed()) {
         rc.response().setStatusCode(500).setStatusMessage(event.cause().message).end(); return@Handler

@@ -36,13 +36,11 @@ object Main {
             val config = gotConfig.result()
             val webOptions = DeploymentOptions().setHa(true).setConfig(config)
             val backOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(1)
-            val dbProjectionsEndpoint = config.getString("PROJECTION_ENDPOINT")
             CompositeFuture.all(
-              deploy(vertx, AcctsWebVerticle::class.java.name, webOptions),
-              deploySingleton(vertx,
-                      AcctsUIPjcVerticle::class.java.name, AcctsUIPjcVerticle::class.java.name, backOptions, processId),
-              deploySingleton(vertx,
-                      AccountsDbPjcVerticle::class.java.name, dbProjectionsEndpoint, backOptions, processId))
+              deploy(vertx, AcctsWebCommandVerticle::class.java.name, webOptions),
+              deploy(vertx, AcctsWebQueryVerticle::class.java.name, webOptions),
+              deploySingleton(vertx, AccountsDbProjectionsVerticle::class.java.name, backOptions, processId),
+              deploySingleton(vertx, AcctsUIProjectionsVerticle::class.java.name, backOptions, processId))
               .setHandler { deploys ->
                 if (deploys.succeeded()) {
                   val deploymentIds = deploys.result().list<String>()
