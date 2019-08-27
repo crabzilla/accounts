@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/crabzilla/crabzilla.svg?branch=master)](https://travis-ci.org/crabzilla/crabzilla)
+[![codecov](https://codecov.io/gh/crabzilla/accounts/branch/master/graph/badge.svg)](https://codecov.io/gh/crabzilla/accounts)
 
 # Crabzilla Accounts Example
 
