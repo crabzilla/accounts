@@ -5,7 +5,8 @@
 ### Overview
 
 This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/). 
-I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design
+I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design But this is not a microservice based app: instead, let's call it an 
+Event Sourced monolith.
 
 ![Architecture](crabzilla-accts.png)
 
