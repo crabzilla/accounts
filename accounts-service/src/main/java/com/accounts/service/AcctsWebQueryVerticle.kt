@@ -1,12 +1,10 @@
 package com.accounts.service
 
-import com.accounts.model.AccountCmdAware
-import com.accounts.model.AccountJsonAware
 import com.accounts.service.reports.AccountsRepositoryImpl
 import com.accounts.service.reports.AccountsWebHandlers
 import com.accounts.service.reports.ConsistencyRepository
 import com.accounts.service.reports.ConsistencyWebHandlers
-import io.github.crabzilla.webpgc.WebCmdHandlerVerticle
+import io.github.crabzilla.webpgc.WebQueryVerticle
 import io.vertx.core.Future
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
@@ -19,10 +17,10 @@ import io.vertx.ext.web.handler.sockjs.BridgeOptions
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import org.slf4j.LoggerFactory.getLogger
 
-class AcctsWebVerticle : WebCmdHandlerVerticle() {
+class AcctsWebQueryVerticle : WebQueryVerticle() {
 
   companion object {
-    internal val log = getLogger(AcctsWebVerticle::class.java)
+    internal val log = getLogger(AcctsWebQueryVerticle::class.java)
   }
 
   private lateinit var server: HttpServer
@@ -35,9 +33,6 @@ class AcctsWebVerticle : WebCmdHandlerVerticle() {
     val router = Router.router(vertx)
     router.route().handler(LoggerHandler.create())
     router.route().handler(BodyHandler.create())
-
-    // command routes
-    addResourceForEntity("accounts", "account", AccountJsonAware(), AccountCmdAware(), router)
 
     // reports routes
     val accountHandlers = AccountsWebHandlers(AccountsRepositoryImpl(readDb))
@@ -58,7 +53,6 @@ class AcctsWebVerticle : WebCmdHandlerVerticle() {
     router.route().handler(StaticHandler.create().setIndexPage("index.html").setWebRoot("webroot"));
 
     // http server
-    val httpPort = config.getInteger("HTTP_PORT")
     server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
     server.requestHandler(router).listen { startedFuture ->
       if (startedFuture.succeeded()) {

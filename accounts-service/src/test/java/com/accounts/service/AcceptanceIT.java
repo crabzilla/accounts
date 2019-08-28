@@ -48,7 +48,9 @@ class AcceptanceIT {
     LoggerFactory.getLogger(io.vertx.core.logging.LoggerFactory.class);// Required for Logback to work in Vertx
   }
 
-  private static int port = findFreeHttpPort();
+  private static int readHttpPort = findFreeHttpPort();
+  private static int writeHttpPort = findFreeHttpPort();
+  
   private static int findFreeHttpPort() {
     int httpPort = 0;
     try {
@@ -70,13 +72,15 @@ class AcceptanceIT {
             return;
           }
           JsonObject config = gotConfig.result();
-          config.put("HTTP_PORT", port);
+          config.put("WRITE_HTTP_PORT", writeHttpPort);
+          config.put("READ_HTTP_PORT", readHttpPort);
           DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
           WebClientOptions wco = new WebClientOptions();
           client = WebClient.create(vertx, wco);
           CompositeFuture.all(
-            deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
-            deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions)
+            deploy(vertx, AcctsWebCommandVerticle.class.getName(), deploymentOptions),
+            deploy(vertx, AcctsWebQueryVerticle.class.getName(), deploymentOptions),
+            deploy(vertx, AccountsDbProjectionsVerticle.class.getName(), deploymentOptions)
           ).setHandler(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);
@@ -118,7 +122,7 @@ class AcceptanceIT {
     void a7(VertxTestContext tc) {
       MakeWithdraw makeWithdraw = new MakeWithdraw(new BigDecimal(10));
       JsonObject cmdAsJson = JsonObject.mapFrom(makeWithdraw);
-      client.post(port, "0.0.0.0", "/accounts/" + random.nextInt() + "/commands/make-withdraw")
+      client.post(writeHttpPort, "0.0.0.0", "/accounts/" + random.nextInt() + "/commands/make-withdraw")
         .as(BodyCodec.jsonObject())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .sendJsonObject(cmdAsJson, tc.succeeding(response -> tc.verify(() -> {
@@ -140,7 +144,7 @@ class AcceptanceIT {
     void a1(VertxTestContext tc) {
       MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(10));
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
-      client.post(port, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-deposit")
+      client.post(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-deposit")
         .as(BodyCodec.jsonObject())
         .expect(ResponsePredicate.SC_SUCCESS)
         .expect(ResponsePredicate.JSON)
@@ -170,7 +174,7 @@ class AcceptanceIT {
     @DisplayName("You get account summary with balance = 10.00")
     void a2(VertxTestContext tc) {
 
-      client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
+      client.get(readHttpPort, "0.0.0.0", "/accounts/" + randomAcctId)
         .as(BodyCodec.jsonObject())
         .expect(ResponsePredicate.SC_SUCCESS)
         .expect(ResponsePredicate.JSON)
@@ -190,7 +194,7 @@ class AcceptanceIT {
     @DisplayName("You get accounts with just this account")
     void a22(VertxTestContext tc) {
 
-      client.get(port, "0.0.0.0", "/accounts")
+      client.get(readHttpPort, "0.0.0.0", "/accounts")
         .as(BodyCodec.jsonArray())
         .expect(ResponsePredicate.SC_SUCCESS)
         .expect(ResponsePredicate.JSON)
@@ -210,7 +214,7 @@ class AcceptanceIT {
     @Test
     @DisplayName("You don't have any inconsistency between your write and read models")
     void a23(VertxTestContext tc) {
-      client.get(port, "0.0.0.0", "/inconsistencies")
+      client.get(readHttpPort, "0.0.0.0", "/inconsistencies")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_NOT_FOUND)
         .putHeader("accept", "application/json")
@@ -232,7 +236,7 @@ class AcceptanceIT {
       void a3(VertxTestContext tc) {
         MakeWithdraw makeWithdraw = new MakeWithdraw(new BigDecimal(5));
         JsonObject cmdAsJson = JsonObject.mapFrom(makeWithdraw);
-        client.post(port, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-withdraw")
+        client.post(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-withdraw")
           .as(BodyCodec.jsonObject())
           .expect(ResponsePredicate.SC_SUCCESS)
           .expect(ResponsePredicate.JSON)
@@ -259,7 +263,7 @@ class AcceptanceIT {
       @DisplayName("You get account summary with balance = 5.00")
       void a4(VertxTestContext tc) throws InterruptedException {
 
-        client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
+        client.get(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId)
           .as(BodyCodec.jsonObject())
           .expect(ResponsePredicate.SC_SUCCESS)
           .expect(ResponsePredicate.JSON)
@@ -283,7 +287,7 @@ class AcceptanceIT {
         void a5(VertxTestContext tc) {
           MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
           JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
-          client.post(port, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-deposit")
+          client.post(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-deposit")
             .as(BodyCodec.jsonObject())
             .expect(ResponsePredicate.SC_SUCCESS)
             .expect(ResponsePredicate.JSON)
@@ -309,7 +313,7 @@ class AcceptanceIT {
         @DisplayName("You get accounts with just this account")
         void a6(VertxTestContext tc) throws InterruptedException {
           Thread.sleep(500);
-          client.get(port, "0.0.0.0", "/accounts")
+          client.get(writeHttpPort, "0.0.0.0", "/accounts")
                   .as(BodyCodec.jsonArray())
                   .expect(ResponsePredicate.SC_SUCCESS)
                   .expect(ResponsePredicate.JSON)
@@ -329,7 +333,7 @@ class AcceptanceIT {
         @DisplayName("You get account summary with balance = 6.00")
         void a7(VertxTestContext tc) throws InterruptedException {
 
-          client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
+          client.get(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId)
             .as(BodyCodec.jsonObject())
             .expect(ResponsePredicate.SC_SUCCESS)
             .expect(ResponsePredicate.JSON)
@@ -353,7 +357,7 @@ class AcceptanceIT {
           void a3(VertxTestContext tc) {
             MakeWithdraw makeWithdraw = new MakeWithdraw(new BigDecimal(100));
             JsonObject cmdAsJson = JsonObject.mapFrom(makeWithdraw);
-            client.post(port, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-withdraw")
+            client.post(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId + "/commands/make-withdraw")
               .as(BodyCodec.jsonObject())
               .expect(ResponsePredicate.SC_BAD_REQUEST)
               .sendJson(cmdAsJson, tc.succeeding(response -> tc.verify(() -> {
@@ -369,7 +373,7 @@ class AcceptanceIT {
           @DisplayName("Your account summary keep with balance = 6.00")
           void a4(VertxTestContext tc) {
 
-            client.get(port, "0.0.0.0", "/accounts/" + randomAcctId)
+            client.get(writeHttpPort, "0.0.0.0", "/accounts/" + randomAcctId)
               .as(BodyCodec.jsonObject())
               .expect(ResponsePredicate.SC_SUCCESS)
               .expect(ResponsePredicate.JSON)

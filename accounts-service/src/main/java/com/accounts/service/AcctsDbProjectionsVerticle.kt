@@ -14,10 +14,10 @@ import io.vertx.core.Future
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-open class AccountsDbPjcVerticle : DbProjectionsVerticle() {
+open class AccountsDbProjectionsVerticle : DbProjectionsVerticle() {
 
   override fun start(startFuture: Future<Void>) {
-    super.start(startFuture)
+    super.start()
     addEntityJsonAware("account", AccountJsonAware())
     addProjector("accounts-summary", AccountsSummaryProjector())
     startFuture.complete()

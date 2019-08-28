@@ -44,7 +44,10 @@ class ErrorScenariosIT {
   private static final Random random = new Random();
   private static WebClient client;
 
-  private static int port = findFreeHttpPort();
+
+  private static int readHttpPort = findFreeHttpPort();
+  private static int writeHttpPort = findFreeHttpPort();
+
   private static int findFreeHttpPort() {
     int httpPort = 0;
     try {
@@ -66,14 +69,16 @@ class ErrorScenariosIT {
           return;
         }
         JsonObject config = gotConfig.result();
-        config.put("HTTP_PORT", port);
+        config.put("WRITE_HTTP_PORT", writeHttpPort);
+        config.put("READ_HTTP_PORT", readHttpPort);
         DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
         WebClientOptions wco = new WebClientOptions();
         client = WebClient.create(vertx, wco);
         CompositeFuture.all(
-          deploy(vertx, AcctsWebVerticle.class.getName(), deploymentOptions),
-          deploy(vertx, AccountsDbPjcVerticle.class.getName(), deploymentOptions))
-          .setHandler(deploy ->  {
+                deploy(vertx, AcctsWebCommandVerticle.class.getName(), deploymentOptions),
+                deploy(vertx, AcctsWebQueryVerticle.class.getName(), deploymentOptions),
+                deploy(vertx, AccountsDbProjectionsVerticle.class.getName(), deploymentOptions))
+        .setHandler(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);
               PgPool write = writeModelPgPool(vertx, config);
@@ -113,7 +118,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 404")
     void a11(VertxTestContext tc) {
-      client.get(port, "0.0.0.0", "/accounts/" + random.nextInt())
+      client.get(readHttpPort, "0.0.0.0", "/accounts/" + random.nextInt())
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_NOT_FOUND)
         .putHeader("accept", "application/json")
@@ -134,7 +139,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 400")
     void a12(VertxTestContext tc) {
-      client.get(port, "0.0.0.0", "/accounts/dd")
+      client.get(readHttpPort, "0.0.0.0", "/accounts/dd")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .send(tc.succeeding(response -> tc.verify(() -> {
@@ -154,7 +159,7 @@ class ErrorScenariosIT {
     void a13(VertxTestContext tc) {
       MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
-      client.post(port, "0.0.0.0", "/accounts/NOT_A_NUMBER/commands/make-deposit")
+      client.post(writeHttpPort, "0.0.0.0", "/accounts/NOT_A_NUMBER/commands/make-deposit")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .sendJsonObject(cmdAsJson, tc.succeeding(response -> tc.verify(() -> {
@@ -172,7 +177,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 400")
     void a14(VertxTestContext tc) {
-      client.get(port, "0.0.0.0", "/accounts/units-of-work/dddd")
+      client.get(writeHttpPort, "0.0.0.0", "/accounts/units-of-work/dddd")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .send(tc.succeeding(response -> tc.verify(() -> {

@@ -5,12 +5,12 @@
   <parent>
     <groupId>com.accounts</groupId>
     <artifactId>accounts</artifactId>
-    <version>0.0.6-rc13</version>
+    <version>0.0.1-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>accounts-service</artifactId>
-  <version>0.0.6-rc13</version>
+  <version>0.0.1-SNAPSHOT</version>
 
   <properties>
     <quarkus.version>0.13.3</quarkus.version>
@@ -19,34 +19,14 @@
 
   <dependencies>
 
-    <!-- crabzilla -->
-    <dependency>
-      <groupId>${crabzilla.group.id}</groupId>
-      <artifactId>crabzilla-core</artifactId>
-      <version>${crabzilla.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${crabzilla.group.id}</groupId>
-      <artifactId>crabzilla-pgc</artifactId>
-      <version>${crabzilla.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${crabzilla.group.id}</groupId>
-      <artifactId>crabzilla-webpgc</artifactId>
-      <version>${crabzilla.version}</version>
-    </dependency>
-
-    <!-- vertx -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-config</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-hazelcast</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
     </dependency>
 
     <dependency>
@@ -54,47 +34,11 @@
       <artifactId>vertx-web</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.reactiverse</groupId>
-      <artifactId>reactive-pg-client</artifactId>
-      <version>0.11.2</version>
-    </dependency>
-
-    <!-- logback -->
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-    </dependency>
-
     <!-- test -->
-
-
-    <!-- test -->
-
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-client</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>5.4.1</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <version>${assertj-core.version}</version>
       <scope>test</scope>
     </dependency>
 
