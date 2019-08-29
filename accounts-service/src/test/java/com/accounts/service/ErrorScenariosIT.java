@@ -159,7 +159,7 @@ class ErrorScenariosIT {
     void a13(VertxTestContext tc) {
       MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
-      client.post(writeHttpPort, "0.0.0.0", "/accounts/NOT_A_NUMBER/commands/make-deposit")
+      client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/NOT_A_NUMBER/make-deposit")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .sendJsonObject(cmdAsJson, tc.succeeding(response -> tc.verify(() -> {
@@ -177,7 +177,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 400")
     void a14(VertxTestContext tc) {
-      client.get(writeHttpPort, "0.0.0.0", "/accounts/units-of-work/dddd")
+      client.get(writeHttpPort, "0.0.0.0", "/commands/accounts/units-of-work/dddd")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .send(tc.succeeding(response -> tc.verify(() -> {

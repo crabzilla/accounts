@@ -6,11 +6,11 @@
   <parent>
     <groupId>com.accounts</groupId>
     <artifactId>accounts</artifactId>
-    <version>0.0.6-rc13</version>
+    <version>0.0.6-rc14</version>
   </parent>
   
   <artifactId>accounts-gatling</artifactId>
-  <version>0.0.6-rc13</version>
+  <version>0.0.6-rc14</version>
 
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>

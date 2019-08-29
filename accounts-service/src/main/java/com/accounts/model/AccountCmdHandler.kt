@@ -4,7 +4,9 @@ import io.github.crabzilla.*
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 
-class AccountCmdHandler(cmdMetadata: CommandMetadata, command: Command, snapshot: Snapshot<AccountEntity>,
+class AccountCmdHandler(cmdMetadata: CommandMetadata,
+                        command: Command,
+                        snapshot: Snapshot<AccountEntity>,
                         stateFn: (DomainEvent, AccountEntity) -> AccountEntity,
                         uowHandler: Handler<AsyncResult<UnitOfWork>>) :
         EntityCommandHandler<AccountEntity>("account", cmdMetadata, command, snapshot, stateFn, uowHandler) {
