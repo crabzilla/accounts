@@ -24,7 +24,7 @@ Event Sourced (reactive?) monolith.
 #### Technical
 
 * The [UnitOfWork](https://github.com/crabzilla/crabzilla/blob/master/crabzilla-core/src/main/java/io/github/crabzilla/UnitOfWork.kt) resulting from a ```Command``` successful submission will be stored as JSON on the [units_of_work](https://github.com/crabzilla/accounts/blob/2493094caa9f77d931f87fe1b7c183463ea903c1/docker-entrypoint-initdb.d/example1_database.sql#L22) table.
-* It leverages Vert.x HA features: event projector is a cluster aware and fail safe singleton verticle. Just run ```java -jar target/accounts-service.jar``` in another console to start a new app instance (http and Hazelcast ports will be increased by 1)
+* It leverages [Vert.x HA features](https://vertx.io/docs/vertx-core/groovy/#_high_availability_and_fail_over): event projector is a cluster aware and fail safe singleton verticle. Just run ```java -jar target/accounts-service.jar``` in another console to start a new app instance (http and Hazelcast ports will be increased by 1)
 * It can be packaged as a native executable using [Quarkus](https://quarkus.io/)
 
 ### Requirements
