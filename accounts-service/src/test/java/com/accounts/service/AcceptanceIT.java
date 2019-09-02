@@ -80,7 +80,7 @@ class AcceptanceIT {
           CompositeFuture.all(
             deploy(vertx, AcctsWebCommandVerticle.class.getName(), deploymentOptions),
             deploy(vertx, AcctsWebQueryVerticle.class.getName(), deploymentOptions),
-            deploy(vertx, AccountsDbProjectionsVerticle.class.getName(), deploymentOptions)
+            deploy(vertx, AcctsDbProjectionsVerticle.class.getName(), deploymentOptions)
           ).setHandler(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);

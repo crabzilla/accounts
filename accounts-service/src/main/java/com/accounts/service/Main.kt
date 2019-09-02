@@ -12,11 +12,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.management.ManagementFactory
 
-object Main {
 
+object Main {
   private val log: Logger = LoggerFactory.getLogger(Main::class.java)
   private const val CONFIG_PATH = "../accounts.env"
-
   @JvmStatic
   fun main(args: Array<String>) {
     val processId = ManagementFactory.getRuntimeMXBean().name
@@ -35,7 +34,7 @@ object Main {
             CompositeFuture.all(
               deploy(vertx, AcctsWebCommandVerticle::class.java.name, webOptions),
               deploy(vertx, AcctsWebQueryVerticle::class.java.name, webOptions),
-              deploySingleton(vertx, AccountsDbProjectionsVerticle::class.java.name, backOptions, processId),
+              deploySingleton(vertx, AcctsDbProjectionsVerticle::class.java.name, backOptions, processId),
               deploySingleton(vertx, AcctsUIProjectionsVerticle::class.java.name, backOptions, processId))
             .setHandler(deployHandler(vertx))
           } else {

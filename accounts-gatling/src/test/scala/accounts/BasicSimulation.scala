@@ -22,7 +22,7 @@ class BasicSimulation extends Simulation {
   val scn = scenario("JustOpeningAccounts")
     .feed(feeder) // attaching feeder to session
     .exec(http("OpeningAccounts")
-    .post("/accounts/${accountId}/commands/make-deposit")
+    .post("/commands/accounts/${accountId}/make-deposit")
     .body(StringBody("""{ "amount": ${accountId}.00 }"""))
   )
 

@@ -14,7 +14,7 @@ import io.vertx.core.Future
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-open class AccountsDbProjectionsVerticle : DbProjectionsVerticle() {
+open class AcctsDbProjectionsVerticle : DbProjectionsVerticle() {
 
   override fun start(startFuture: Future<Void>) {
     super.start()
