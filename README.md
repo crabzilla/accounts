@@ -15,8 +15,8 @@ Event Sourced (reactive?) monolith.
 
 #### Business
 
-* ```POST /accounts/:entityId/commands/make-deposit``` to make a deposit (and create an account if needed) 
-* ```POST /accounts/:entityId/commands/make-withdraw``` to make a withdraw
+* ```POST /commands/accounts/:entityId/make-deposit``` to make a deposit (and create an account if needed) 
+* ```POST /commands/accounts/:entityId/make-withdraw``` to make a withdraw
 * ```GET /index.html``` to see events published to UI
 * ```GET /inconsistencies``` to see a self-check of inconsistencies between read and write models.
 * Transfer between accounts (TODO using a Saga)
@@ -248,7 +248,7 @@ Finally, let's see how is the account read model:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8082/accounts/2001 \
+   http://localhost:8181/accounts/2001 \
    -H 'cache-control: no-cache' 
 ```
 
