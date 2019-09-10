@@ -1,9 +1,9 @@
 package com.crabzilla.examples.accounts.model
 
-import com.crabzilla.examples.accounts.model.AccountCmdAware.Companion.acctStateBuilder
-import io.github.crabzilla.framework.*
-import io.vertx.core.AsyncResult
-import io.vertx.core.Handler
+import io.github.crabzilla.framework.Command
+import io.github.crabzilla.framework.DomainEvent
+import io.github.crabzilla.framework.EntityCommandAware
+import io.github.crabzilla.framework.EntityCommandHandlerFactory
 
 class AccountCmdAware: EntityCommandAware<AccountEntity> {
 
@@ -41,9 +41,3 @@ class AccountCmdAware: EntityCommandAware<AccountEntity> {
 
 }
 
-class AccountCmdHandlerFactory : EntityCommandHandlerFactory<AccountEntity> {
-  override fun createHandler(cmdMetadata: CommandMetadata, command: Command, snapshot: Snapshot<AccountEntity>,
-                             handler: Handler<AsyncResult<UnitOfWork>>): EntityCommandHandler<AccountEntity> {
-    return AccountCmdHandler(cmdMetadata, command, snapshot, acctStateBuilder, handler)
-  }
-}
