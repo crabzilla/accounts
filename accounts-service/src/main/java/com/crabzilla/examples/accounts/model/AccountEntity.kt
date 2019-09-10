@@ -1,7 +1,7 @@
-package com.accounts.model
+package com.crabzilla.examples.accounts.model
 
-import io.github.crabzilla.DomainEvent
-import io.github.crabzilla.Entity
+import io.github.crabzilla.framework.DomainEvent
+import io.github.crabzilla.framework.Entity
 import java.math.BigDecimal
 
 data class AccountEntity(val accountId: AccountId? = null, val balance: BigDecimal = BigDecimal(0)) : Entity {

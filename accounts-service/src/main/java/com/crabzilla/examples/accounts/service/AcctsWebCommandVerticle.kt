@@ -1,11 +1,10 @@
-package com.accounts.service
+package com.crabzilla.examples.accounts.service
 
-import com.accounts.model.AccountCmdAware
-import com.accounts.model.AccountJsonAware
+import com.crabzilla.examples.accounts.model.AccountCmdAware
+import com.crabzilla.examples.accounts.model.AccountJsonAware
 import io.github.crabzilla.webpgc.WebCommandVerticle
 import io.github.crabzilla.webpgc.listenHandler
 import io.vertx.core.Future
-import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler

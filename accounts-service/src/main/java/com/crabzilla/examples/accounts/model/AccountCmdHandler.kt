@@ -1,6 +1,6 @@
-package com.accounts.model
+package com.crabzilla.examples.accounts.model
 
-import io.github.crabzilla.*
+import io.github.crabzilla.framework.*
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 

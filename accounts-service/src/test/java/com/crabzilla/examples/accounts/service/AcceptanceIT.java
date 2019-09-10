@@ -1,8 +1,7 @@
-package com.accounts.service;
+package com.crabzilla.examples.accounts.service;
 
-import com.accounts.model.MakeDeposit;
-import com.accounts.model.MakeWithdraw;
-import io.reactiverse.pgclient.PgPool;
+import com.crabzilla.examples.accounts.model.MakeDeposit;
+import com.crabzilla.examples.accounts.model.MakeWithdraw;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -15,6 +14,7 @@ import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.pgclient.PgPool;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -24,11 +24,11 @@ import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import static io.github.crabzilla.UnitOfWork.JsonMetadata.*;
-import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
-import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
-import static io.github.crabzilla.webpgc.WebpgcKt.deploy;
-import static io.github.crabzilla.webpgc.WebpgcKt.getConfig;
+import static io.github.crabzilla.framework.UnitOfWork.JsonMetadata.*;
+import static io.github.crabzilla.pgc._mainKt.readModelPgPool;
+import static io.github.crabzilla.pgc._mainKt.writeModelPgPool;
+import static io.github.crabzilla.webpgc._mainKt.deploy;
+import static io.github.crabzilla.webpgc._mainKt.getConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**

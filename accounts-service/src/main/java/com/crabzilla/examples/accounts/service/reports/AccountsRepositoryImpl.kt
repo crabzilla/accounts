@@ -1,12 +1,12 @@
-package com.accounts.service.reports
+package com.crabzilla.examples.accounts.service.reports
 
-import com.accounts.model.AccountSummary
-import com.accounts.model.AccountsRepository
-import io.reactiverse.pgclient.PgPool
-import io.reactiverse.pgclient.Tuple
+import com.crabzilla.examples.accounts.model.AccountSummary
+import com.crabzilla.examples.accounts.model.AccountsRepository
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
+import io.vertx.pgclient.PgPool
+import io.vertx.sqlclient.Tuple
 
 /**
  * A read model repository to serve web routes.

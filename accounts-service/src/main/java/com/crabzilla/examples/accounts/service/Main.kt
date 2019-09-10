@@ -1,4 +1,4 @@
-package com.accounts.service
+package com.crabzilla.examples.accounts.service
 
 import io.github.crabzilla.webpgc.deployHandler
 import io.github.crabzilla.webpgc.deploy

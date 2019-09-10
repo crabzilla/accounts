@@ -1,6 +1,6 @@
-package com.accounts.service.reports
+package com.crabzilla.examples.accounts.service.reports
 
-import com.accounts.model.AccountsRepository
+import com.crabzilla.examples.accounts.model.AccountsRepository
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject

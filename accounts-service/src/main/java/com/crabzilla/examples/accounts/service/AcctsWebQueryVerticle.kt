@@ -1,9 +1,9 @@
-package com.accounts.service
+package com.crabzilla.examples.accounts.service
 
-import com.accounts.service.reports.AccountsRepositoryImpl
-import com.accounts.service.reports.AccountsWebHandlers
-import com.accounts.service.reports.ConsistencyRepository
-import com.accounts.service.reports.ConsistencyWebHandlers
+import com.crabzilla.examples.accounts.service.reports.AccountsRepositoryImpl
+import com.crabzilla.examples.accounts.service.reports.AccountsWebHandlers
+import com.crabzilla.examples.accounts.service.reports.ConsistencyRepository
+import com.crabzilla.examples.accounts.service.reports.ConsistencyWebHandlers
 import io.github.crabzilla.webpgc.WebQueryVerticle
 import io.github.crabzilla.webpgc.listenHandler
 import io.vertx.core.Future

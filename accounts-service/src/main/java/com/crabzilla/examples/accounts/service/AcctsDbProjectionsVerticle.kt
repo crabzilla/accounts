@@ -1,16 +1,16 @@
-package com.accounts.service
+package com.crabzilla.examples.accounts.service
 
-import com.accounts.model.AccountCreated
-import com.accounts.model.AccountJsonAware
-import com.accounts.model.AmountDeposited
-import com.accounts.model.AmountWithdrawn
-import io.github.crabzilla.DomainEvent
+import com.crabzilla.examples.accounts.model.AccountCreated
+import com.crabzilla.examples.accounts.model.AccountJsonAware
+import com.crabzilla.examples.accounts.model.AmountDeposited
+import com.crabzilla.examples.accounts.model.AmountWithdrawn
+import io.github.crabzilla.framework.DomainEvent
 import io.github.crabzilla.pgc.PgcEventProjector
 import io.github.crabzilla.pgc.runPreparedQuery
 import io.github.crabzilla.webpgc.DbProjectionsVerticle
-import io.reactiverse.pgclient.PgTransaction
-import io.reactiverse.pgclient.Tuple
 import io.vertx.core.Future
+import io.vertx.sqlclient.Transaction
+import io.vertx.sqlclient.Tuple
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -29,7 +29,7 @@ private class AccountsSummaryProjector : PgcEventProjector {
 
   private val log: Logger = LoggerFactory.getLogger(Main::class.java)
 
-  override fun handle(pgTx: PgTransaction, targetId: Int, event: DomainEvent): Future<Void> {
+  override fun handle(pgTx: Transaction, targetId: Int, event: DomainEvent): Future<Void> {
     log.info("Will project event $event")
     val future: Future<Void> = Future.future()
     when (event) {

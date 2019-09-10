@@ -1,12 +1,12 @@
-package com.accounts.service.reports
+package com.crabzilla.examples.accounts.service.reports
 
-import io.reactiverse.pgclient.PgPool
 import io.vertx.core.AsyncResult
 import io.vertx.core.CompositeFuture
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import io.vertx.pgclient.PgPool
 
 // TODO mudar para usar 2 bancos e usar 2 repos (read e write)
 /**
@@ -64,7 +64,7 @@ class ConsistencyRepository(private val db: PgPool) {
       val set = event.result()
       val array = JsonArray()
       for (row in set) {
-        val jo = JsonObject().put("id", row.getInteger(0)).put("balance", row.getNumeric(1))
+        val jo = JsonObject().put("id", row.getInteger(0)).put("balance", row.getBigDecimal(1))
         array.add(jo)
       }
       aHandler.handle(Future.succeededFuture(array))
@@ -86,7 +86,7 @@ class ConsistencyRepository(private val db: PgPool) {
       val set = event.result()
       val array = JsonArray()
       for (row in set) {
-        val jo = JsonObject().put("id", row.getInteger(0)).put("balance", row.getNumeric(1))
+        val jo = JsonObject().put("id", row.getInteger(0)).put("balance", row.getBigDecimal(1))
         array.add(jo)
       }
       aHandler.handle(Future.succeededFuture(array))
@@ -113,8 +113,8 @@ class ConsistencyRepository(private val db: PgPool) {
       val set = event.result()
       val array = JsonArray()
       for (row in set) {
-        val jo = JsonObject().put("id", row.getInteger(0)).put("snapshot_balance", row.getNumeric(1))
-                .put("summary_balance", row.getNumeric(2)).put("difference", row.getNumeric(3))
+        val jo = JsonObject().put("id", row.getInteger(0)).put("snapshot_balance", row.getBigDecimal(1))
+                .put("summary_balance", row.getBigDecimal(2)).put("difference", row.getBigDecimal(3))
         array.add(jo)
       }
       aHandler.handle(Future.succeededFuture(array))
