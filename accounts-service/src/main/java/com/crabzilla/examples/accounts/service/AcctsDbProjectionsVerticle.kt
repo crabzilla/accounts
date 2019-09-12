@@ -30,7 +30,6 @@ private class AccountsSummaryProjector : PgcEventProjector {
   private val log: Logger = LoggerFactory.getLogger(Main::class.java)
 
   override fun handle(pgTx: Transaction, targetId: Int, event: DomainEvent): Future<Void> {
-    log.info("Will project event $event")
     val future: Future<Void> = Future.future()
     when (event) {
       is AccountCreated -> {

@@ -25,10 +25,10 @@ import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import static io.github.crabzilla.pgc._mainKt.readModelPgPool;
-import static io.github.crabzilla.pgc._mainKt.writeModelPgPool;
-import static io.github.crabzilla.webpgc._mainKt.deploy;
-import static io.github.crabzilla.webpgc._mainKt.getConfig;
+import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
+import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
+import static io.github.crabzilla.webpgc.WebpgcKt.deploy;
+import static io.github.crabzilla.webpgc.WebpgcKt.getConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
