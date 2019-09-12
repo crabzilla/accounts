@@ -1,10 +1,13 @@
 package com.crabzilla.examples.accounts.service
 
-import io.github.crabzilla.webpgc.deployHandler
 import io.github.crabzilla.webpgc.deploy
+import io.github.crabzilla.webpgc.deployHandler
 import io.github.crabzilla.webpgc.deploySingleton
 import io.github.crabzilla.webpgc.getConfig
-import io.vertx.core.*
+import io.vertx.core.CompositeFuture
+import io.vertx.core.DeploymentOptions
+import io.vertx.core.Vertx
+import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.EventBusOptions
 import io.vertx.spi.cluster.hazelcast.ConfigUtil
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager

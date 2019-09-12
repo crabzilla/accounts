@@ -7,7 +7,6 @@ import com.crabzilla.examples.accounts.service.reports.ConsistencyWebHandlers
 import io.github.crabzilla.webpgc.WebQueryVerticle
 import io.github.crabzilla.webpgc.listenHandler
 import io.vertx.core.Future
-import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.web.Router

@@ -2,7 +2,6 @@ package com.crabzilla.examples.accounts.model
 
 import io.github.crabzilla.framework.Command
 import io.github.crabzilla.framework.DomainEvent
-import io.vertx.core.Future
 import io.vertx.core.Promise
 import java.math.BigDecimal
 
