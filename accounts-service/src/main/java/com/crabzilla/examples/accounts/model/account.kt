@@ -2,8 +2,8 @@ package com.crabzilla.examples.accounts.model
 
 import io.github.crabzilla.framework.Command
 import io.github.crabzilla.framework.DomainEvent
-import io.vertx.core.AsyncResult
-import io.vertx.core.Handler
+import io.vertx.core.Future
+import io.vertx.core.Promise
 import java.math.BigDecimal
 
 // shared model
@@ -19,9 +19,9 @@ data class AmountDeposited(val amount: BigDecimal) : DomainEvent
 data class AmountWithdrawn(val amount: BigDecimal) : DomainEvent
 
 // read model
-data class AccountSummary(val accountId: Int, val balance: BigDecimal)
+data class AccountBalance(val accountId: Int, val balance: BigDecimal)
 interface AccountsRepository {
-  fun accountById(accountId: Int, aHandler: Handler<AsyncResult<AccountSummary>>)
-  fun allAccounts(aHandler: Handler<AsyncResult<List<AccountSummary>>>)
+  fun accountById(accountId: Int): Promise<AccountBalance>
+  fun allAccounts(): Promise<List<AccountBalance>>
 }
 
