@@ -3,14 +3,9 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>com.accounts</groupId>
-    <artifactId>accounts</artifactId>
-    <version>0.0.6-rc13</version>
-  </parent>
-  
+  <groupId>com.crabzilla.accounts</groupId>
   <artifactId>accounts-gatling</artifactId>
-  <version>0.0.6-rc13</version>
+  <version>0.0.6-rc16</version>
 
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>

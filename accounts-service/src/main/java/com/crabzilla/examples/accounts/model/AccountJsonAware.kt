@@ -1,8 +1,8 @@
-package com.accounts.model
+package com.crabzilla.examples.accounts.model
 
-import io.github.crabzilla.Command
-import io.github.crabzilla.DomainEvent
-import io.github.crabzilla.EntityJsonAware
+import io.github.crabzilla.framework.Command
+import io.github.crabzilla.framework.DomainEvent
+import io.github.crabzilla.framework.EntityJsonAware
 import io.vertx.core.json.JsonObject
 
 class AccountJsonAware : EntityJsonAware<AccountEntity> {

@@ -6,8 +6,7 @@
 ### Overview
 
 This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/). 
-I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design But this is not a microservice based app: instead, let's call it an 
-Event Sourced (reactive?) monolith.
+I needed a better example than the dumb "example1 customer" used within Crabzilla tests so I got some inspiration from https://github.com/pmlopes/reactive-microservice-design But the intent here is not to be a microservice example: instead, it is an example of an app based on CQRS and Event Sourcing.
 
 ![Architecture](crabzilla-accts.png)
 
@@ -15,8 +14,8 @@ Event Sourced (reactive?) monolith.
 
 #### Business
 
-* ```POST /accounts/:entityId/commands/make-deposit``` to make a deposit (and create an account if needed) 
-* ```POST /accounts/:entityId/commands/make-withdraw``` to make a withdraw
+* ```POST /commands/accounts/:entityId/make-deposit``` to make a deposit (and create an account if needed) 
+* ```POST /commands/accounts/:entityId/make-withdraw``` to make a withdraw
 * ```GET /index.html``` to see events published to UI
 * ```GET /inconsistencies``` to see a self-check of inconsistencies between read and write models.
 * Transfer between accounts (TODO using a Saga)
@@ -35,7 +34,7 @@ Event Sourced (reactive?) monolith.
 * Graal -> you if want to package it as native app
 * Port 8080 -> used by [Adminer db console](https://www.adminer.org/) 
 * Port 5432 -> used by [Postgres database](https://www.postgresql.org/)
-* Port 8081 (http) and 5701 (Hazelcast) -> used by the `accounts-service` 
+* Port 8081 (http write port), 8181 (http read port) and 5701 (Hazelcast) -> used by the `accounts-service` 
 
 ### Usage
 
@@ -57,7 +56,7 @@ now let's open an account #2001 with $10.00:
 
 ```bash
 curl -i -X POST \
-   http://localhost:8081/accounts/2001/commands/make-deposit \
+   http://localhost:8081/commands/accounts/2001/make-deposit \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 10.00}'
@@ -68,13 +67,13 @@ the response should be similar to:
 ```
 HTTP/1.1 303 See Other
 accept: application/json
-Location: http://localhost:8081/accounts/units-of-work/1
+Location: http://localhost:8081/commands/accounts/units-of-work/1
 content-length: 0
 ```
 following the redirect: 
 
 ```
-curl -i -X GET http://localhost:8081/accounts/units-of-work/1
+curl -i -X GET http://localhost:8081/commands/accounts/units-of-work/1
 ```
 
 ```
@@ -116,7 +115,7 @@ then let's try to withdrawn $15 from that account #2001:
 
 ```bash
 curl -i -X POST \
-   http://localhost:8081/accounts/2001/commands/make-withdraw \
+   http://localhost:8081/commands/accounts/2001/make-withdraw \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 15.00}' 
@@ -134,7 +133,7 @@ so let's make a valid withdraw:
 
 ```bash
 curl -i -X POST \
-   http://localhost:8081/accounts/2001/commands/make-withdraw \
+   http://localhost:8081/commands/accounts/2001/make-withdraw \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 6.00}' 
@@ -145,7 +144,7 @@ the result:
 ```
 HTTP/1.1 303 See Other
 accept: application/json
-Location: http://localhost:8081/accounts/units-of-work/2
+Location: http://localhost:8081/commands/accounts/units-of-work/2
 content-length: 0
 ```
 
@@ -183,7 +182,7 @@ Now let's see this account full track:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8081/accounts/2001/units-of-work \
+   http://localhost:8081/commands/accounts/2001/units-of-work \
    -H 'cache-control: no-cache' 
 ```
 
@@ -248,7 +247,7 @@ Finally, let's see how is the account read model:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8081/accounts/2001 \
+   http://localhost:8181/accounts/2001 \
    -H 'cache-control: no-cache' 
 ```
 

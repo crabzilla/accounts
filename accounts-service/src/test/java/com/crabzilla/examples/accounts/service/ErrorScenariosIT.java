@@ -1,7 +1,6 @@
-package com.accounts.service;
+package com.crabzilla.examples.accounts.service;
 
-import com.accounts.model.MakeDeposit;
-import io.reactiverse.pgclient.PgPool;
+import com.crabzilla.examples.accounts.model.MakeDeposit;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -13,7 +12,11 @@ import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.*;
+import io.vertx.pgclient.PgPool;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +80,7 @@ class ErrorScenariosIT {
         CompositeFuture.all(
                 deploy(vertx, AcctsWebCommandVerticle.class.getName(), deploymentOptions),
                 deploy(vertx, AcctsWebQueryVerticle.class.getName(), deploymentOptions),
-                deploy(vertx, AccountsDbProjectionsVerticle.class.getName(), deploymentOptions))
+                deploy(vertx, AcctsDbProjectionsVerticle.class.getName(), deploymentOptions))
         .setHandler(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);
@@ -159,7 +162,7 @@ class ErrorScenariosIT {
     void a13(VertxTestContext tc) {
       MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
-      client.post(writeHttpPort, "0.0.0.0", "/accounts/NOT_A_NUMBER/commands/make-deposit")
+      client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/NOT_A_NUMBER/make-deposit")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .sendJsonObject(cmdAsJson, tc.succeeding(response -> tc.verify(() -> {
@@ -177,7 +180,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 400")
     void a14(VertxTestContext tc) {
-      client.get(writeHttpPort, "0.0.0.0", "/accounts/units-of-work/dddd")
+      client.get(writeHttpPort, "0.0.0.0", "/commands/accounts/units-of-work/dddd")
         .as(BodyCodec.string())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
         .send(tc.succeeding(response -> tc.verify(() -> {

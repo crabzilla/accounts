@@ -1,6 +1,6 @@
-package com.accounts.service.reports
+package com.crabzilla.examples.accounts.service.reports
 
-import com.accounts.model.AccountsRepository
+import com.crabzilla.examples.accounts.model.AccountsRepository
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
@@ -15,7 +15,7 @@ class AccountsWebHandlers(private val accountRepo: AccountsRepository) {
               .end("path param entityId must be a number")
       return
     }
-    accountRepo.accountById(accountId, Handler { event ->
+    accountRepo.accountById(accountId).future().setHandler(Handler { event ->
       if (event.failed()) {
         rc.response().setStatusCode(500).setStatusMessage(event.cause().message).end(); return@Handler
       }
@@ -30,10 +30,10 @@ class AccountsWebHandlers(private val accountRepo: AccountsRepository) {
   }
 
   fun allAccounts(rc: RoutingContext) {
-    accountRepo.allAccounts(Handler { event ->
-      if (event.failed()) {
+    accountRepo.allAccounts().future().setHandler(Handler { event ->
+       if (event.failed()) {
         rc.response().setStatusCode(500).setStatusMessage(event.cause().message).end();
-      } else {
+       } else {
         val result = event.result()
         if (result == null || result.isEmpty()) {
           rc.response().setStatusCode(404).end("Cannot found any Account"); return@Handler
