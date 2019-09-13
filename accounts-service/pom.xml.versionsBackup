@@ -6,13 +6,13 @@
 
   <groupId>com.crabzilla.accounts</groupId>
   <artifactId>accounts-service</artifactId>
-  <version>0.0.6-rc16</version>
+  <version>0.0.6-rc15</version>
 
   <properties>
     <!-- using version published by jitpack -->
-    <crabzilla.group.id>com.github.crabzilla.crabzilla</crabzilla.group.id>
+    <!--        <crabzilla.group.id>com.github.crabzilla.crabzilla</crabzilla.group.id>-->
     <!-- using version published locally -->
-<!--    <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>-->
+    <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>
     <crabzilla.version>0.0.6-rc16</crabzilla.version>
     <vertx.version>3.8.1</vertx.version>
     <kotlin.version>1.3.30</kotlin.version>
