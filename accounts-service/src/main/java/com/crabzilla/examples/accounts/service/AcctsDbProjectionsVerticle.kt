@@ -8,50 +8,44 @@ import io.github.crabzilla.framework.DomainEvent
 import io.github.crabzilla.pgc.PgcEventProjector
 import io.github.crabzilla.pgc.runPreparedQuery
 import io.github.crabzilla.webpgc.DbProjectionsVerticle
-import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.sqlclient.Transaction
 import io.vertx.sqlclient.Tuple
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 open class AcctsDbProjectionsVerticle : DbProjectionsVerticle() {
 
-  override fun start(startFuture: Future<Void>) {
+  override fun start(startPromise: Promise<Void>) {
     super.start()
     addEntityJsonAware("account", AccountJsonAware())
     addProjector("accounts-summary", AccountsSummaryProjector())
-    startFuture.complete()
+    startPromise.complete()
   }
 
 }
 
 private class AccountsSummaryProjector : PgcEventProjector {
 
-  private val log: Logger = LoggerFactory.getLogger(Main::class.java)
-
-  override fun handle(pgTx: Transaction, targetId: Int, event: DomainEvent): Future<Void> {
-    val future: Future<Void> = Future.future()
-    when (event) {
+  override fun handle(pgTx: Transaction, targetId: Int, event: DomainEvent): Promise<Void> {
+    return when (event) {
       is AccountCreated -> {
         val query = "INSERT INTO account_summary (id) VALUES ($1)"
         val tuple = Tuple.of(targetId)
-        pgTx.runPreparedQuery(query, tuple, future)
+        pgTx.runPreparedQuery(query, tuple)
       }
       is AmountDeposited -> {
         val query = "UPDATE account_summary SET balance = balance + $1 WHERE id = $2"
         val tuple = Tuple.of(event.amount, targetId)
-        pgTx.runPreparedQuery(query, tuple, future)
+        pgTx.runPreparedQuery(query, tuple)
       }
       is AmountWithdrawn -> {
         val query = "UPDATE account_summary SET balance = balance - $1 WHERE id = $2"
         val tuple = Tuple.of(event.amount, targetId)
-        pgTx.runPreparedQuery(query, tuple, future)
+        pgTx.runPreparedQuery(query, tuple)
       }
       else -> {
-        future.complete()
+        Promise.failedPromise<Void>("Unknown event ${event.javaClass.name}")
       }
     }
-    return future
   }
 
 }

@@ -4,7 +4,7 @@ import com.crabzilla.examples.accounts.model.AccountCmdAware
 import com.crabzilla.examples.accounts.model.AccountJsonAware
 import io.github.crabzilla.webpgc.WebCommandVerticle
 import io.github.crabzilla.webpgc.listenHandler
-import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
@@ -17,7 +17,7 @@ class AcctsWebCommandVerticle : WebCommandVerticle() {
     internal val log = getLogger(AcctsWebCommandVerticle::class.java)
   }
 
-  override fun start(future: Future<Void>) {
+  override fun start(promise: Promise<Void>) {
 
     log.info("*** httpPort: $httpPort")
 
@@ -30,7 +30,7 @@ class AcctsWebCommandVerticle : WebCommandVerticle() {
 
     // http server
     val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
-    server.requestHandler(router).listen(listenHandler(future))
+    server.requestHandler(router).listen(listenHandler(promise.future()))
 
   }
 

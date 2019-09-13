@@ -9,6 +9,7 @@ import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.EventBusOptions
+import io.vertx.core.logging.SLF4JLogDelegateFactory
 import io.vertx.spi.cluster.hazelcast.ConfigUtil
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
 import org.slf4j.Logger

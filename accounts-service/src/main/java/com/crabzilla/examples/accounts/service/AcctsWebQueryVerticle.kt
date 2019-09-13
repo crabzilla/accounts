@@ -6,7 +6,7 @@ import com.crabzilla.examples.accounts.service.reports.ConsistencyRepository
 import com.crabzilla.examples.accounts.service.reports.ConsistencyWebHandlers
 import io.github.crabzilla.webpgc.WebQueryVerticle
 import io.github.crabzilla.webpgc.listenHandler
-import io.vertx.core.Future
+import io.vertx.core.Promise
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.bridge.PermittedOptions
 import io.vertx.ext.web.Router
@@ -23,7 +23,7 @@ class AcctsWebQueryVerticle : WebQueryVerticle() {
     internal val log = getLogger(AcctsWebQueryVerticle::class.java)
   }
 
-  override fun start(future: Future<Void>) {
+  override fun start(promise: Promise<Void>) {
 
     log.info("*** httpPort: $httpPort")
 
@@ -53,7 +53,7 @@ class AcctsWebQueryVerticle : WebQueryVerticle() {
 
     // http server
     val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
-    server.requestHandler(router).listen(listenHandler(future))
+    server.requestHandler(router).listen(listenHandler(promise.future()))
 
   }
 
