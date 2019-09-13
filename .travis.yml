@@ -30,6 +30,8 @@ install: false
 script:
   - sleep 1
   - ls -la
+  - cd accounts-service
+  - ls -la
   - mvn clean verify
 
 after_success:
