@@ -47,8 +47,8 @@ docker-compose up
 then:
 
 ```bash
-mvn clean install
 cd accounts-service
+mvn clean install
 java -jar target/accounts-service.jar
 ```
 
@@ -355,7 +355,7 @@ and hopefully you will get:
 Both write and read models seems to be consistent, yay!
 ```
 
-### Packaging as a native app
+### Packaging as a native app 
 
 First you need to install Graal. Here is an example with [Jabba](https://github.com/shyiko/jabba):
 
