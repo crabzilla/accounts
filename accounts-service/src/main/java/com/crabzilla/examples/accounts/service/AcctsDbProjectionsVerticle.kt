@@ -43,7 +43,10 @@ private class AccountsSummaryProjector : PgcEventProjector {
         pgTx.runPreparedQuery(query, tuple)
       }
       else -> {
-        Promise.failedPromise<Void>("Unknown event ${event.javaClass.name}")
+        // TODO create a helper on PgcEventProjector for this
+        val promise = Promise.promise<Void>()
+        promise.complete()
+        return promise
       }
     }
   }

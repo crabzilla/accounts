@@ -2,8 +2,6 @@ package com.crabzilla.examples.accounts.model
 
 import io.github.crabzilla.framework.*
 import io.vertx.core.Promise
-import io.vertx.core.Promise.failedPromise
-import io.vertx.core.Promise.succeededPromise
 
 class AccountCmdHandler(cmdMetadata: CommandMetadata,
                         command: Command,
