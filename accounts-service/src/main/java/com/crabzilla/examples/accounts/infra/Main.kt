@@ -1,4 +1,4 @@
-package com.crabzilla.examples.accounts.service
+package com.crabzilla.examples.accounts.infra
 
 import io.github.crabzilla.webpgc.deploy
 import io.github.crabzilla.webpgc.deployHandler
@@ -9,17 +9,15 @@ import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.EventBusOptions
-import io.vertx.core.logging.SLF4JLogDelegateFactory
 import io.vertx.spi.cluster.hazelcast.ConfigUtil
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.management.ManagementFactory
 
-
 object Main {
   private val log: Logger = LoggerFactory.getLogger(Main::class.java)
-  private const val CONFIG_PATH = "../accounts.env"
+  private const val CONFIG_PATH = "./accounts.env"
   @JvmStatic
   fun main(args: Array<String>) {
     val processId = ManagementFactory.getRuntimeMXBean().name
@@ -30,7 +28,7 @@ object Main {
     Vertx.clusteredVertx(vertxOptions) { gotCluster ->
       if (gotCluster.succeeded()) {
         val vertx = gotCluster.result()
-        getConfig(vertx, CONFIG_PATH).setHandler { gotConfig ->
+        getConfig(vertx, CONFIG_PATH).onComplete { gotConfig ->
           if (gotConfig.succeeded()) {
             val config = gotConfig.result()
             val webOptions = DeploymentOptions().setHa(true).setConfig(config)
@@ -40,7 +38,7 @@ object Main {
               deploy(vertx, AcctsWebQueryVerticle::class.java.name, webOptions),
               deploySingleton(vertx, AcctsDbProjectionsVerticle::class.java.name, backOptions, processId),
               deploySingleton(vertx, AcctsUIProjectionsVerticle::class.java.name, backOptions, processId))
-            .setHandler(deployHandler(vertx))
+            .onComplete(deployHandler(vertx))
           } else {
             log.error("Failed to get config", gotConfig.cause())
           }
@@ -50,6 +48,4 @@ object Main {
       }
     }
   }
-
 }
-

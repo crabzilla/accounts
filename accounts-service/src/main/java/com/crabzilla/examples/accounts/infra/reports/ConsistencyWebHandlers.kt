@@ -1,4 +1,4 @@
-package com.crabzilla.examples.accounts.service.reports
+package com.crabzilla.examples.accounts.infra.reports
 
 import io.vertx.ext.web.RoutingContext
 
@@ -11,12 +11,11 @@ class ConsistencyWebHandlers(private val consistencyRepo: ConsistencyRepository)
       }
       val result = event.result()
       if (result == null || result.isEmpty) {
-        rc.response().setStatusCode(404).end("Both write and read models seems to be consistent, yay!");
+        rc.response().setStatusCode(404).end("Both write and read models seems to be consistent, yay!")
         return@setHandler
       }
       rc.response().putHeader("Content-Type", "application/json").setStatusCode(200).setChunked(true)
               .end(result.encode())
     }
   }
-
 }

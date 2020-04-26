@@ -19,11 +19,11 @@ CREATE TABLE account_summary (
 
 -- write model (in production, it could be a different database instance)
 
+
 CREATE TABLE units_of_work (
       uow_id BIGSERIAL,
       uow_events JSONB NOT NULL,
       cmd_id UUID NOT NULL,
-      cmd_name VARCHAR(36) NOT NULL,
       cmd_data JSONB NOT NULL,
       ar_name VARCHAR(36) NOT NULL,
       ar_id INTEGER NOT NULL,

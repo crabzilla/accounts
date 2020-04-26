@@ -1,7 +1,9 @@
-package com.crabzilla.examples.accounts.service
+package com.crabzilla.examples.accounts.infra
 
-import com.crabzilla.examples.accounts.model.AccountCmdAware
-import com.crabzilla.examples.accounts.model.AccountJsonAware
+import com.crabzilla.examples.accounts.domain.AccountCmdAware
+import com.crabzilla.examples.accounts.domain.MakeDeposit
+import com.crabzilla.examples.accounts.domain.MakeWithdraw
+import com.crabzilla.examples.accounts.domain.accountsJson
 import io.github.crabzilla.webpgc.WebCommandVerticle
 import io.github.crabzilla.webpgc.listenHandler
 import io.vertx.core.Promise
@@ -25,14 +27,15 @@ class AcctsWebCommandVerticle : WebCommandVerticle() {
     router.route().handler(LoggerHandler.create())
     router.route().handler(BodyHandler.create())
 
+    val cmdTypeMap = mapOf(
+            Pair("make-deposit", MakeDeposit::class.qualifiedName as String),
+            Pair("make-withdraw", MakeWithdraw::class.qualifiedName as String))
+
     // command routes
-    addResourceForEntity("accounts", "account", AccountJsonAware(), AccountCmdAware(), router)
+    addResourceForEntity("accounts", "account", AccountCmdAware(), cmdTypeMap, accountsJson, router)
 
     // http server
     val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
-    server.requestHandler(router).listen(listenHandler(promise.future()))
-
+    server.requestHandler(router).listen(listenHandler(promise))
   }
-
 }
-

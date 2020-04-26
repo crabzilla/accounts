@@ -25,14 +25,14 @@ cache:
   directories:
   - "$HOME/.m2"
 
-install: false
+install:
+  - cd accounts-service
+  - mvn clean verify -DskipIT=false
 
 script:
   - sleep 1
   - ls -la
-  - cd accounts-service
-  - ls -la
-  - mvn clean verify
+  - mvn clean install -DskipIT=false
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

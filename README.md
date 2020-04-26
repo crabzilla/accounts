@@ -23,8 +23,7 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 #### Technical
 
 * The [UnitOfWork](https://github.com/crabzilla/crabzilla/blob/master/crabzilla-core/src/main/java/io/github/crabzilla/UnitOfWork.kt) resulting from a ```Command``` successful submission will be stored as JSON on the [units_of_work](https://github.com/crabzilla/accounts/blob/2493094caa9f77d931f87fe1b7c183463ea903c1/docker-entrypoint-initdb.d/example1_database.sql#L22) table.
-* It leverages [Vert.x HA features](https://vertx.io/docs/vertx-core/groovy/#_high_availability_and_fail_over): event projector is a cluster aware and fail safe singleton verticle. Just run ```java -jar target/accounts-service.jar``` in another console to start a new app instance (http and Hazelcast ports will be increased by 1)
-* It can be packaged as a native executable using [Quarkus](https://quarkus.io/)
+* It leverages Vert.x HA features: event projector is a cluster aware and fail safe singleton verticle. Just run ```java -jar target/accounts-service.jar``` in another console to start a new app instance (http and Hazelcast ports will be increased by 1)
 
 ### Requirements
 
@@ -353,33 +352,4 @@ and hopefully you will get:
 
 ```
 Both write and read models seems to be consistent, yay!
-```
-
-### Packaging as a native app 
-
-First you need to install Graal. Here is an example with [Jabba](https://github.com/shyiko/jabba):
-
-```bash
-jabba install graalvm@1.0.0-16
-jabba use graalvm@1.0.0-16
-export GRAALVM_HOME=/home/YOUR_USERNAME/.jabba/jdk/graalvm@1.0.0-16
-```
-
-Now you can try to package the app with [Quarkus](https://quarkus.io/):
-
-```bash
-cd accounts-service
-mvn clean package -P quarkus
-```
-
-then run it:
-
-```bash
-./target/accounts-service-0.0.1-SNAPSHOT-runner
-```
-
-and you should see something like:
-
-```
-Application started in 782 ms
 ```

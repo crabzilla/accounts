@@ -1,7 +1,5 @@
-package com.crabzilla.examples.accounts.service;
+package com.crabzilla.examples.accounts.infra;
 
-import com.crabzilla.examples.accounts.model.MakeDeposit;
-import com.crabzilla.examples.accounts.model.MakeWithdraw;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -20,11 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import static io.github.crabzilla.framework.UnitOfWork.JsonMetadata.*;
+import static io.github.crabzilla.core.UnitOfWork.JsonMetadata.*;
 import static io.github.crabzilla.pgc.PgcKt.readModelPgPool;
 import static io.github.crabzilla.pgc.PgcKt.writeModelPgPool;
 import static io.github.crabzilla.webpgc.WebpgcKt.deploy;
@@ -66,7 +63,7 @@ class AcceptanceIT {
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
     getConfig(vertx,  "./../accounts.env")
-        .setHandler(gotConfig -> {
+        .onComplete(gotConfig -> {
           if (gotConfig.failed()) {
             tc.failNow(gotConfig.cause());
             return;
@@ -81,21 +78,21 @@ class AcceptanceIT {
             deploy(vertx, AcctsWebCommandVerticle.class.getName(), deploymentOptions),
             deploy(vertx, AcctsWebQueryVerticle.class.getName(), deploymentOptions),
             deploy(vertx, AcctsDbProjectionsVerticle.class.getName(), deploymentOptions)
-          ).setHandler(deploy ->  {
+          ).onComplete(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);
               PgPool write = writeModelPgPool(vertx, config);
-              write.query("delete from units_of_work", event1 -> {
+              write.query("delete from units_of_work").execute(event1 -> {
                 if (event1.failed()) {
                   tc.failNow(event1.cause());
                   return;
                 }
-                write.query("delete from account_snapshots", event2 -> {
+                write.query("delete from account_snapshots").execute(event2 -> {
                   if (event2.failed()) {
                     tc.failNow(event2.cause());
                     return;
                   }
-                  read.query("delete from account_summary", event3 -> {
+                  read.query("delete from account_summary").execute(event3 -> {
                     if (event3.failed()) {
                       tc.failNow(event3.cause());
                       return;
@@ -120,8 +117,7 @@ class AcceptanceIT {
     @Test
     @DisplayName("You get a bad request")
     void a7(VertxTestContext tc) {
-      MakeWithdraw makeWithdraw = new MakeWithdraw(new BigDecimal(10));
-      JsonObject cmdAsJson = JsonObject.mapFrom(makeWithdraw);
+      JsonObject cmdAsJson = new JsonObject("{\"amount\" : 10.00}");
       client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/" + random.nextInt() + "/make-withdraw")
         .as(BodyCodec.jsonObject())
         .expect(ResponsePredicate.SC_BAD_REQUEST)
@@ -142,8 +138,7 @@ class AcceptanceIT {
     @Order(1)
     @DisplayName("You get version 1 and events = AccountCreated and $10 AmountDeposit")
     void a1(VertxTestContext tc) {
-      MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(10));
-      JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
+      JsonObject cmdAsJson = new JsonObject("{\"amount\" : 10.00}");
       client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/" + randomAcctId + "/make-deposit")
         .as(BodyCodec.jsonObject())
         .expect(ResponsePredicate.SC_SUCCESS)
@@ -156,14 +151,13 @@ class AcceptanceIT {
           assertThat(result.getString(ENTITY_NAME)).isEqualTo("account");
           assertThat(result.getInteger(ENTITY_ID)).isEqualTo(randomAcctId);
           assertThat(result.getString(COMMAND_ID)).isNotNull();
-          assertThat(result.getString(COMMAND_NAME)).isEqualTo("make-deposit");
           assertThat(result.getJsonObject(COMMAND)).isEqualTo(cmdAsJson);
           assertThat(result.getInteger(VERSION)).isEqualTo(1);
           assertThat(result.getJsonArray(EVENTS).size()).isEqualTo(2);
-          assertThat(result.getJsonArray(EVENTS).getJsonObject(0).getJsonObject("second")
+          assertThat(result.getJsonArray(EVENTS).getJsonObject(0)
                   .getJsonObject("accountId").getDouble("value")).isEqualTo(randomAcctId);
-          assertThat(result.getJsonArray(EVENTS).getJsonObject(1).getJsonObject("second")
-                  .getDouble("amount")).isEqualTo(makeDeposit.component1().intValue());
+          assertThat(result.getJsonArray(EVENTS).getJsonObject(1)
+                  .getDouble("amount")).isEqualTo(10.00);
           tc.completeNow();
         }))
       );
@@ -198,7 +192,6 @@ class AcceptanceIT {
         .as(BodyCodec.jsonArray())
         .expect(ResponsePredicate.SC_SUCCESS)
         .expect(ResponsePredicate.JSON)
-//        .putHeader("accept", "application/json")
         .send(tc.succeeding(response -> tc.verify(() -> {
             JsonArray result = response.body();
             assertThat(result.size()).isEqualTo(1);
@@ -234,8 +227,7 @@ class AcceptanceIT {
       @Order(1)
       @DisplayName("You get version 2 and a $5 AmountWithdrawn event")
       void a3(VertxTestContext tc) {
-        MakeWithdraw makeWithdraw = new MakeWithdraw(new BigDecimal(5));
-        JsonObject cmdAsJson = JsonObject.mapFrom(makeWithdraw);
+        JsonObject cmdAsJson = new JsonObject("{\"amount\" : 5.00}");
         client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/" + randomAcctId + "/make-withdraw")
           .as(BodyCodec.jsonObject())
           .expect(ResponsePredicate.SC_SUCCESS)
@@ -248,12 +240,11 @@ class AcceptanceIT {
             assertThat(result.getString(ENTITY_NAME)).isEqualTo("account");
             assertThat(result.getInteger(ENTITY_ID)).isEqualTo(randomAcctId);
             assertThat(result.getString(COMMAND_ID)).isNotNull();
-            assertThat(result.getString(COMMAND_NAME)).isEqualTo("make-withdraw");
             assertThat(result.getJsonObject(COMMAND)).isEqualTo(cmdAsJson);
             assertThat(result.getInteger(VERSION)).isEqualTo(2);
             assertThat(result.getJsonArray(EVENTS).size()).isEqualTo(1);
-            assertThat(result.getJsonArray(EVENTS).getJsonObject(0).getJsonObject("second").getDouble("amount"))
-                    .isEqualTo(makeWithdraw.component1().intValue());
+            assertThat(result.getJsonArray(EVENTS).getJsonObject(0).getDouble("amount"))
+                    .isEqualTo(5);
             tc.completeNow();
           }))
         );
@@ -285,8 +276,7 @@ class AcceptanceIT {
         @Order(1)
         @DisplayName("You get version 3 and and $1 AmountDeposit event")
         void a5(VertxTestContext tc) {
-          MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
-          JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
+          JsonObject cmdAsJson = new JsonObject("{\"amount\" : 1.00}");
           client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/" + randomAcctId + "/make-deposit")
             .as(BodyCodec.jsonObject())
             .expect(ResponsePredicate.SC_SUCCESS)
@@ -298,12 +288,11 @@ class AcceptanceIT {
               assertThat(result.getString(ENTITY_NAME)).isEqualTo("account");
               assertThat(result.getInteger(ENTITY_ID)).isEqualTo(randomAcctId);
               assertThat(result.getString(COMMAND_ID)).isNotNull();
-              assertThat(result.getString(COMMAND_NAME)).isEqualTo("make-deposit");
               assertThat(result.getJsonObject(COMMAND)).isEqualTo(cmdAsJson);
               assertThat(result.getInteger(VERSION)).isEqualTo(3);
               assertThat(result.getJsonArray(EVENTS).size()).isEqualTo(1);
-              assertThat(result.getJsonArray(EVENTS).getJsonObject(0).getJsonObject("second").getDouble("amount"))
-                      .isEqualTo(makeDeposit.component1().intValue());
+              assertThat(result.getJsonArray(EVENTS).getJsonObject(0).getDouble("amount"))
+                      .isEqualTo(1);
               tc.completeNow();
             }))
           );
@@ -355,8 +344,7 @@ class AcceptanceIT {
           @Order(1)
           @DisplayName("You get 400")
           void a3(VertxTestContext tc) {
-            MakeWithdraw makeWithdraw = new MakeWithdraw(new BigDecimal(100));
-            JsonObject cmdAsJson = JsonObject.mapFrom(makeWithdraw);
+            JsonObject cmdAsJson = new JsonObject("{\"amount\" : 100.00}");
             client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/" + randomAcctId + "/make-withdraw")
               .as(BodyCodec.jsonObject())
               .expect(ResponsePredicate.SC_BAD_REQUEST)
