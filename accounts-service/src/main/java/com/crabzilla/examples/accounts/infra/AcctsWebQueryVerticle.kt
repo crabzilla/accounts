@@ -1,9 +1,9 @@
-package com.crabzilla.examples.accounts.service
+package com.crabzilla.examples.accounts.infra
 
-import com.crabzilla.examples.accounts.service.reports.AccountsRepositoryImpl
-import com.crabzilla.examples.accounts.service.reports.AccountsWebHandlers
-import com.crabzilla.examples.accounts.service.reports.ConsistencyRepository
-import com.crabzilla.examples.accounts.service.reports.ConsistencyWebHandlers
+import com.crabzilla.examples.accounts.infra.reports.AccountsRepositoryImpl
+import com.crabzilla.examples.accounts.infra.reports.AccountsWebHandlers
+import com.crabzilla.examples.accounts.infra.reports.ConsistencyRepository
+import com.crabzilla.examples.accounts.infra.reports.ConsistencyWebHandlers
 import io.github.crabzilla.webpgc.WebQueryVerticle
 import io.github.crabzilla.webpgc.listenHandler
 import io.vertx.core.Promise
@@ -49,13 +49,10 @@ class AcctsWebQueryVerticle : WebQueryVerticle() {
     router.route("/eventbus/*").handler(sockJSHandler)
 
     // Serve the static resources
-    router.route().handler(StaticHandler.create().setIndexPage("index.html").setWebRoot("webroot"));
+    router.route().handler(StaticHandler.create().setIndexPage("index.html").setWebRoot("webroot"))
 
     // http server
     val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
-    server.requestHandler(router).listen(listenHandler(promise.future()))
-
+    server.requestHandler(router).listen(listenHandler(promise))
   }
-
 }
-

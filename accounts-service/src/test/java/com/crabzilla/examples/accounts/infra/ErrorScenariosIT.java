@@ -1,6 +1,6 @@
-package com.crabzilla.examples.accounts.service;
+package com.crabzilla.examples.accounts.infra;
 
-import com.crabzilla.examples.accounts.model.MakeDeposit;
+import com.crabzilla.examples.accounts.domain.MakeDeposit;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -21,7 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.util.Random;
 
@@ -81,21 +80,21 @@ class ErrorScenariosIT {
                 deploy(vertx, AcctsWebCommandVerticle.class.getName(), deploymentOptions),
                 deploy(vertx, AcctsWebQueryVerticle.class.getName(), deploymentOptions),
                 deploy(vertx, AcctsDbProjectionsVerticle.class.getName(), deploymentOptions))
-        .setHandler(deploy ->  {
+        .onComplete(deploy ->  {
             if (deploy.succeeded()) {
               PgPool read = readModelPgPool(vertx, config);
               PgPool write = writeModelPgPool(vertx, config);
-              write.query("delete from units_of_work", event1 -> {
+              write.query("delete from units_of_work").execute( event1 -> {
                 if (event1.failed()) {
                   tc.failNow(event1.cause());
                   return;
                 }
-                write.query("delete from account_snapshots", event2 -> {
+                write.query("delete from account_snapshots").execute(event2 -> {
                   if (event2.failed()) {
                     tc.failNow(event2.cause());
                     return;
                   }
-                  read.query("delete from account_summary", event3 -> {
+                  read.query("delete from account_summary").execute(event3 -> {
                     if (event3.failed()) {
                       tc.failNow(event3.cause());
                       return;
@@ -160,7 +159,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 400")
     void a13(VertxTestContext tc) {
-      MakeDeposit makeDeposit = new MakeDeposit(new BigDecimal(1));
+      MakeDeposit makeDeposit = new MakeDeposit(10);
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
       client.post(writeHttpPort, "0.0.0.0", "/commands/accounts/NOT_A_NUMBER/make-deposit")
         .as(BodyCodec.string())

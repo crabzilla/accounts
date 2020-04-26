@@ -1,4 +1,4 @@
-package com.crabzilla.examples.accounts.service.reports
+package com.crabzilla.examples.accounts.infra.reports
 
 import io.vertx.core.CompositeFuture
 import io.vertx.core.Future
@@ -53,9 +53,9 @@ class ConsistencyRepository(private val db: PgPool) {
                    FROM account_snapshots
                   WHERE ar_id not in (SELECT id from account_summary)
                  ORDER by ar_id """.trimMargin()
-    db.preparedQuery(sql) { event ->
+    db.preparedQuery(sql).execute() { event ->
       if (event.failed()) {
-        promise.fail(event.cause()); return@preparedQuery
+        promise.fail(event.cause()); return@execute
       }
       val set = event.result()
       val array = JsonArray()
@@ -77,9 +77,9 @@ class ConsistencyRepository(private val db: PgPool) {
                    FROM account_summary
                   WHERE id not in (SELECT ar_id from account_snapshots)
                  ORDER by id """.trimMargin()
-    db.preparedQuery(sql) { event ->
+    db.preparedQuery(sql).execute { event ->
       if (event.failed()) {
-        promise.fail(event.cause()); return@preparedQuery
+        promise.fail(event.cause()); return@execute
       }
       val set = event.result()
       val array = JsonArray()
@@ -106,9 +106,9 @@ class ConsistencyRepository(private val db: PgPool) {
                     ON account_summary.id = account_snapshots.ar_id
                 WHERE account_summary.balance != (account_snapshots.json_content -> 'balance')::numeric
                  ORDER by difference """.trimMargin()
-    db.preparedQuery(sql) { event ->
+    db.preparedQuery(sql).execute { event ->
       if (event.failed()) {
-        promise.fail(event.cause()); return@preparedQuery
+        promise.fail(event.cause()); return@execute
       }
       val set = event.result()
       val array = JsonArray()
@@ -121,5 +121,4 @@ class ConsistencyRepository(private val db: PgPool) {
     }
     return promise.future()
   }
-
 }
