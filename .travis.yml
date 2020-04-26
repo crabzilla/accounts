@@ -26,12 +26,11 @@ cache:
   - "$HOME/.m2"
 
 install:
-  mvn clean verify -DskipIT=false
+  - cd accounts-service
+  - mvn clean verify -DskipIT=false
 
 script:
   - sleep 1
-  - ls -la
-  - cd accounts-service
   - ls -la
   - mvn clean install -DskipIT=false
 
