@@ -63,5 +63,4 @@ class DbProjectionsVerticle : AbstractVerticle() {
       }
     }
   }
-
 }

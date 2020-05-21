@@ -15,17 +15,17 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.EventBusOptions
 import io.vertx.spi.cluster.hazelcast.ConfigUtil
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
+import java.lang.management.ManagementFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.management.ManagementFactory
 
 object
 Main {
   private val log: Logger = LoggerFactory.getLogger(Main::class.java)
   private const val CONFIG_PATH = "./accounts.env"
+
   @JvmStatic
   fun main(args: Array<String>) {
-
     val cores = Runtime.getRuntime().availableProcessors()
     val processId = ManagementFactory.getRuntimeMXBean().name
     val hzConfig = ConfigUtil.loadConfig()
@@ -45,7 +45,7 @@ Main {
                     deploy(vertx, WebQueryVerticle::class.java.name, webOptions),
                     deploySingleton(vertx, DbProjectionsVerticle::class.java.name, backOptions, processId),
                     deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
-            .onComplete(deployHandler(vertx))
+                    .onComplete(deployHandler(vertx))
           } else {
             log.error("Failed to get config", gotConfig.cause())
           }

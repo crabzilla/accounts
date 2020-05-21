@@ -56,6 +56,5 @@ class WebCommandVerticle : AbstractVerticle() {
     log.info("WRITE_HTTP_PORT $httpPort")
     val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
     server.requestHandler(router).listen(listenHandler(promise))
-
   }
 }

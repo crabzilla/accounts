@@ -28,5 +28,4 @@ class UIProjectionsVerticle : AbstractVerticle() {
 
     promise.complete()
   }
-
 }

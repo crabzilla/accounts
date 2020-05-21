@@ -24,4 +24,3 @@ fun pgPool(vertx: Vertx, config: JsonObject, id: String): PgPool {
   val pgPoolOptions = PoolOptions().setMaxSize(config.getInteger("${id}_DATABASE_POOL_MAX_SIZE"))
   return PgPool.pool(vertx, readOptions, pgPoolOptions)
 }
-

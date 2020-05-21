@@ -5,9 +5,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.crabzilla.accounts</groupId>
+    <parent>
+        <groupId>io.github.crabzilla</groupId>
+        <artifactId>crabzilla</artifactId>
+        <version>v0.0.8</version>
+    </parent>
+
     <artifactId>accounts-service</artifactId>
-    <version>v0.0.8</version>
+    <packaging>jar</packaging>
 
     <properties>
         <!-- using version published by jitpack -->

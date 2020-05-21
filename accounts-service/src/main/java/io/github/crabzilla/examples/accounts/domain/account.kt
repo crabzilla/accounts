@@ -7,9 +7,9 @@ import io.github.crabzilla.core.EntityCommandAware
 import io.vertx.core.Future
 import io.vertx.core.Future.failedFuture
 import io.vertx.core.Future.succeededFuture
+import java.math.BigDecimal
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
-import java.math.BigDecimal
 
 @Serializable
 data class AccountId(val value: Int)

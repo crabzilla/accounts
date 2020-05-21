@@ -55,23 +55,23 @@ class WebQueryVerticle : AbstractVerticle() {
 
     router.get("/accounts").produces(JSON).handler { rc ->
       repository.getAllAccountsSummary()
-        .onSuccess { result -> rc.response().end(JsonArray(result).encode())}
+        .onSuccess { result -> rc.response().end(JsonArray(result).encode()) }
         .onFailure { err -> rc.response().setStatusCode(500).end(err.message) }
     }
 
     router.get("/inconsistencies").handler { rc ->
-      insconsistencies(repository)
+      insconsistenciesHandler(repository)
         .onSuccess { errors ->
           rc.response().setStatusCode(200).end(errors.encodePrettily())
         }
         .onFailure { err -> rc.response().setStatusCode(500).end(err.message) }
-}
+    }
 
     // eventBus to browser
     val sockJSHandler = SockJSHandler.create(vertx)
     // Allow events for the designated addresses in/out of the event bus bridge
     val options = BridgeOptions().addOutboundPermitted(PermittedOptions()
-                                 .setAddress(config.getString("UI_PROJECTION_CHANNEL")))
+      .setAddress(config.getString("UI_PROJECTION_CHANNEL")))
     sockJSHandler.bridge(options)
     router.route("/eventbus/*").handler(sockJSHandler)
 
@@ -84,14 +84,14 @@ class WebQueryVerticle : AbstractVerticle() {
     server.requestHandler(router).listen(listenHandler(promise))
   }
 
-  fun insconsistencies(repo: DatabaseRepository): Future<JsonArray> {
+  private fun insconsistenciesHandler(repo: DatabaseRepository): Future<JsonArray> {
     val promise = Promise.promise<JsonArray>()
     repo.getAllAccountsSummary()
       .onSuccess { readModel: MutableList<AccountSummary> ->
         repo.getAccountsFromWriteModel()
-          .onSuccess {  writeModel: MutableList<AccountSummary> ->
-            val readMap = readModel.map { it.id to it.balance} .toMap()
-            val writeMap = writeModel.map { it.id to it.balance} .toMap()
+          .onSuccess { writeModel: MutableList<AccountSummary> ->
+            val readMap = readModel.map { it.id to it.balance }.toMap()
+            val writeMap = writeModel.map { it.id to it.balance }.toMap()
             val errors = JsonArray()
             if (readMap.size != writeMap.size) {
               val error = "read model has ${readModel.size} accounts while write model has ${writeModel.size} accounts"
@@ -101,8 +101,8 @@ class WebQueryVerticle : AbstractVerticle() {
               val readBalance = readMap[id]
               if (readBalance == null || readBalance.toDouble() != writeBalance.toDouble()) {
                 val json = JsonObject().put("id", id)
-                                .put("write_balance", writeBalance.toDouble())
-                                .put("read_balance", readBalance?.toDouble())
+                  .put("write_balance", writeBalance.toDouble())
+                  .put("read_balance", readBalance?.toDouble())
                 errors.add(json)
               }
             }
@@ -113,6 +113,4 @@ class WebQueryVerticle : AbstractVerticle() {
       .onFailure { err -> promise.fail(err) }
     return promise.future()
   }
-
-
 }
