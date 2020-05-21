@@ -48,7 +48,7 @@ then:
 ```bash
 cd accounts-service
 mvn clean install
-java -jar target/accounts-service.jar
+java -jar target/crabzilla-accounts.jar
 ```
 
 now let's open an account #2001 with $10.00:
@@ -65,47 +65,40 @@ the response should be similar to:
 
 ```
 HTTP/1.1 303 See Other
-accept: application/json
-Location: http://localhost:8081/commands/account/units-of-work/1
+Location: http://localhost:8081/commands/account/units-of-work/10
+Content-Type: application/json
 content-length: 0
 ```
 following the redirect: 
 
 ```
-curl -i -X GET http://localhost:8081/commands/account/units-of-work/1
+curl -i -X GET http://localhost:8081/commands/account/units-of-work/10
 ```
 
 ```
 HTTP/1.1 200 OK
 transfer-encoding: chunked
+uowId: 10
 Content-Type: application/json
-uowId: 1
 ```
 
 ```json
-{  
+{
    "entityName":"account",
    "entityId":2001,
-   "commandId":"09b53f1f-ba5b-40a6-8bff-c302bd8fca4a",
-   "commandName":"make-deposit",
-   "command":{  
+   "commandId":"9c2ce841-5bad-4eb4-8519-77551685fb96",
+   "command":{
       "amount":10.0
    },
    "version":1,
-   "events":[  
-      {  
-         "first":"AccountCreated",
-         "second":{  
-            "accountId":{  
-               "value":2001
-            }
+   "events":[
+      {
+         "accountId":{
+            "value":2001
          }
       },
-      {  
-         "first":"AmountDeposited",
-         "second":{  
-            "amount":10.0
-         }
+      {
+         "amount":10.0
       }
    ]
 }
@@ -142,40 +135,41 @@ the result:
 
 ```
 HTTP/1.1 303 See Other
-accept: application/json
-Location: http://localhost:8081/commands/account/units-of-work/2
+Location: http://localhost:8081/commands/account/units-of-work/11
+Content-Type: application/json
 content-length: 0
 ```
 
 following the redirect:
 
 ```
+curl -i -X GET http://localhost:8081/commands/account/units-of-work/11
+```
+
+result
+
+```
 HTTP/1.1 200 OK
 transfer-encoding: chunked
 Content-Type: application/json
-uowId: 2
+uowId: 11
 ```
 
 ```json
-{  
+{
    "entityName":"account",
    "entityId":2001,
-   "commandId":"5e07d0a0-c322-4964-a055-18a0de413526",
-   "commandName":"make-withdraw",
-   "command":{  
+   "commandId":"d6542f26-1069-4a74-9b3d-dfaa8fcbadc8",
+   "command":{
       "amount":6.0
    },
    "version":2,
-   "events":[  
-      {  
-         "first":"AmountWithdrawn",
-         "second":{  
-            "amount":6.0
-         }
+   "events":[
+      {
+         "amount":6.0
       }
    ]
-}
-```
+}```
 
 Now let's see this account full track:
 
@@ -194,48 +188,37 @@ Content-Type: application/json
 ```
 
 ```json
-[  
-   {  
+[
+   {
       "entityName":"account",
       "entityId":2001,
-      "commandId":"09b53f1f-ba5b-40a6-8bff-c302bd8fca4a",
-      "commandName":"make-deposit",
-      "command":{  
+      "commandId":"9c2ce841-5bad-4eb4-8519-77551685fb96",
+      "command":{
          "amount":10.0
       },
       "version":1,
-      "events":[  
-         {  
-            "first":"AccountCreated",
-            "second":{  
-               "accountId":{  
-                  "value":2001
-               }
+      "events":[
+         {
+            "accountId":{
+               "value":2001
             }
          },
-         {  
-            "first":"AmountDeposited",
-            "second":{  
-               "amount":10.0
-            }
+         {
+            "amount":10.0
          }
       ]
    },
-   {  
+   {
       "entityName":"account",
       "entityId":2001,
-      "commandId":"5e07d0a0-c322-4964-a055-18a0de413526",
-      "commandName":"make-withdraw",
-      "command":{  
+      "commandId":"d6542f26-1069-4a74-9b3d-dfaa8fcbadc8",
+      "command":{
          "amount":6.0
       },
       "version":2,
-      "events":[  
-         {  
-            "first":"AmountWithdrawn",
-            "second":{  
-               "amount":6.0
-            }
+      "events":[
+         {
+            "amount":6.0
          }
       ]
    }
@@ -330,11 +313,11 @@ Please open the following file: .../accounts/accounts-gatling/target/gatling/bas
 
 ```
 
-Cool, now let's see all opened acccounts:
+Cool, now let's see all opened acccounts from read model (http port 8082):
 
 ```bash
 curl -i -X GET \
-   http://localhost:8081/accounts \
+   http://localhost:8082/accounts \
    -H 'cache-control: no-cache' 
 ```
 
@@ -344,12 +327,15 @@ Ok, but now let's see if both read and write models are in sync and consistent:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8081/inconsistencies \
+   http://localhost:8082/inconsistencies \
    -H 'cache-control: no-cache' 
 ```
 
 and hopefully you will get:
 
 ```
-Both write and read models seems to be consistent, yay!
+HTTP/1.1 200 OK
+content-length: 3
 ```
+
+meaning both write and read model is consistent.
