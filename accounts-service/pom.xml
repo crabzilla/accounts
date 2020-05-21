@@ -7,8 +7,8 @@
 
     <parent>
         <groupId>io.github.crabzilla</groupId>
-        <artifactId>crabzilla</artifactId>
-        <version>v0.0.8</version>
+        <artifactId>accounts</artifactId>
+        <version>v0.0.8-rc</version>
     </parent>
 
     <artifactId>accounts-service</artifactId>
@@ -16,10 +16,10 @@
 
     <properties>
         <!-- using version published by jitpack -->
-        <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>
+        <crabzilla.group.id>io.github.crabzilla.crabzilla</crabzilla.group.id>
         <!-- using version published locally -->
 <!--        <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>-->
-        <crabzilla.version>v0.0.8-rc</crabzilla.version>
+        <crabzilla.version>${project.parent.version}</crabzilla.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>

@@ -5,8 +5,8 @@
 
   <parent>
     <groupId>io.github.crabzilla</groupId>
-    <artifactId>crabzilla</artifactId>
-    <version>v0.0.8</version>
+    <artifactId>accounts</artifactId>
+    <version>v0.0.8-rc</version>
   </parent>
 
   <artifactId>accounts-gatling</artifactId>
