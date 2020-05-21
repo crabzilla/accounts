@@ -16,7 +16,7 @@
 
     <properties>
         <!-- using version published by jitpack -->
-        <crabzilla.group.id>io.github.crabzilla.crabzilla</crabzilla.group.id>
+        <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>
         <!-- using version published locally -->
 <!--        <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>-->
         <crabzilla.version>v0.0.8-rc</crabzilla.version>
