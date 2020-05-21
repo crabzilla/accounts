@@ -69,11 +69,14 @@ Location: http://localhost:8081/commands/account/units-of-work/10
 Content-Type: application/json
 content-length: 0
 ```
+
 following the redirect: 
 
 ```
 curl -i -X GET http://localhost:8081/commands/account/units-of-work/10
 ```
+
+result:
 
 ```
 HTTP/1.1 200 OK
@@ -103,6 +106,7 @@ Content-Type: application/json
    ]
 }
 ```
+
 then let's try to withdrawn $15 from that account #2001:
 
 ```bash
@@ -129,7 +133,7 @@ curl -i -X POST \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 6.00}' 
- ```
+```
 
 the result:
 
@@ -169,7 +173,8 @@ uowId: 11
          "amount":6.0
       }
    ]
-}```
+}
+```
 
 Now let's see this account full track:
 
@@ -241,7 +246,7 @@ Content-Type: application/json
 content-length: 44
 
 {
-  "accountId" : 2001,
+  "id" : 2001,
   "balance" : 4.00
 }
 ```
@@ -262,7 +267,7 @@ docker-compose up
 * Select `PostgreSQL` as database
 * Set `user1` as username
 * Set `pwd1` as passwor
-* Set `example1`as database 
+* Set `example1_write`as database 
 
 ### Testing with Gatling:
 
