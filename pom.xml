@@ -8,7 +8,7 @@
     <groupId>io.github.crabzilla.examples</groupId>
     <artifactId>accounts</artifactId>
     <version>v0.0.8</version>
-  <packaging>pom</packaging>
+    <packaging>pom</packaging>
 
     <modules>
         <module>accounts-service</module>
