@@ -35,7 +35,7 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 * Port 5432 -> used by [Postgres database](https://www.postgresql.org/)
 * Port 8081 (http write port)
 * Port 8082 (http read port) 
-* Port 5701 (Hazelcast) -> used by the `accounts-service` 
+* Port 5701 (Hazelcast) 
 
 ### Usage
 
