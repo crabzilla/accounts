@@ -33,7 +33,9 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 * Graal -> you if want to package it as native app
 * Port 8080 -> used by [Adminer db console](https://www.adminer.org/) 
 * Port 5432 -> used by [Postgres database](https://www.postgresql.org/)
-* Port 8081 (http write port), 8181 (http read port) and 5701 (Hazelcast) -> used by the `accounts-service` 
+* Port 8081 (http write port)
+* Port 8082 (http read port) 
+* Port 5701 (Hazelcast) -> used by the `accounts-service` 
 
 ### Usage
 
