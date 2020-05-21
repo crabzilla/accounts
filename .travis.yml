@@ -26,7 +26,6 @@ cache:
   - "$HOME/.m2"
 
 install:
-  - cd accounts-service
   - mvn clean verify -DskipIT=false
 
 script:

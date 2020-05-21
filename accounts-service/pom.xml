@@ -5,21 +5,28 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.crabzilla.accounts</groupId>
+    <parent>
+        <groupId>io.github.crabzilla</groupId>
+        <artifactId>accounts</artifactId>
+        <version>v0.0.8-rc</version>
+    </parent>
+
     <artifactId>accounts-service</artifactId>
-    <version>v0.0.7</version>
+    <packaging>jar</packaging>
 
     <properties>
         <!-- using version published by jitpack -->
-        <crabzilla.group.id>com.github.crabzilla.crabzilla</crabzilla.group.id>
+        <crabzilla.group.id>io.github.crabzilla.crabzilla</crabzilla.group.id>
         <!-- using version published locally -->
-        <!--    <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>-->
-        <crabzilla.version>${project.version}</crabzilla.version>
+<!--        <crabzilla.group.id>io.github.crabzilla</crabzilla.group.id>-->
+        <crabzilla.version>${project.parent.version}</crabzilla.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
 
-        <!-- crabzilla core -->
+        <jooq.version>3.13.1</jooq.version>
+        <vertx-jooq.version>5.1.1</vertx-jooq.version>
+        <postgresql.version>42.2.10</postgresql.version>
         <kotlin.version>1.3.72</kotlin.version>
         <serialization.version>0.20.0</serialization.version>
         <vertx.version>3.9.0</vertx.version>
@@ -114,7 +121,13 @@
 
         <dependency>
             <groupId>${crabzilla.group.id}</groupId>
-            <artifactId>crabzilla-web-pg-client</artifactId>
+            <artifactId>crabzilla-jooq</artifactId>
+            <version>${crabzilla.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${crabzilla.group.id}</groupId>
+            <artifactId>crabzilla-web</artifactId>
             <version>${crabzilla.version}</version>
         </dependency>
 
@@ -149,6 +162,12 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.jklingsporn</groupId>
+            <artifactId>vertx-jooq-classic-reactive</artifactId>
+            <version>${vertx-jooq.version}</version>
         </dependency>
 
         <!-- test -->
@@ -458,7 +477,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.crabzilla.examples.accounts.infra.Main</mainClass>
+                            <mainClass>io.github.crabzilla.examples.accounts.Main</mainClass>
                             <classpathPrefix>dependency-jars/</classpathPrefix>
                         </manifest>
                     </archive>
@@ -486,5 +505,119 @@
         </plugins>
 
     </build>
+
+    <profiles>
+        <profile>
+            <id>jooq</id>
+            <!--
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>-->
+            <properties>
+                <jdbc.user>user1</jdbc.user>
+                <jdbc.password>pwd1</jdbc.password>
+                <jdbc.url>jdbc:postgresql:example1_read</jdbc.url>
+                <jdbc.driver>org.postgresql.Driver</jdbc.driver>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-codegen-maven</artifactId>
+                        <version>${jooq.version}</version>
+                        <!-- The plugin should hook into the generate goal -->
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <!--              <dependency>-->
+                            <!--                <groupId>org.jooq</groupId>-->
+                            <!--                <artifactId>jooq-meta</artifactId>-->
+                            <!--                <version>${jooq.version}</version>-->
+                            <!--              </dependency>-->
+                            <!--              <dependency>-->
+                            <!--                <groupId>org.jooq</groupId>-->
+                            <!--                <artifactId>jooq-codegen</artifactId>-->
+                            <!--                <version>${jooq.version}</version>-->
+                            <!--              </dependency>-->
+                            <dependency>
+                                <groupId>io.github.jklingsporn</groupId>
+                                <artifactId>vertx-jooq-generate</artifactId>
+                                <version>${vertx-jooq.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.postgresql</groupId>
+                                <artifactId>postgresql</artifactId>
+                                <version>${postgresql.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <jdbc>
+                                <driver>${jdbc.driver}</driver>
+                                <url>${jdbc.url}</url>
+                                <user>${jdbc.user}</user>
+                                <password>${jdbc.password}</password>
+                            </jdbc>
+                            <generator>
+                                <name>io.github.jklingsporn.vertx.jooq.generate.classic.ClassicReactiveVertxGenerator</name>
+                                <database>
+                                    <inputSchema>public</inputSchema>
+                                    <name>org.jooq.meta.postgres.PostgresDatabase</name>
+                                    <includes>.*</includes>
+                                    <excludes>.*projections|.*snapshots|units_of_work</excludes>
+                                    <forcedTypes>
+                                        <!--                    <forcedType>-->
+                                        <!--                      <userType>java.time.LocalDateTime</userType>-->
+                                        <!--                      <converter>org.jooq.impl.TimestampToLocalDateTimeConverter</converter>-->
+                                        <!--                      <expression>.*date*.</expression>-->
+                                        <!--                      <types>.*</types>-->
+                                        <!--                    </forcedType>-->
+                                        <!-- Convert tinyint to boolean -->
+                                        <forcedType>
+                                            <name>BOOLEAN</name>
+                                            <types>(?i:TINYINT)</types>
+                                        </forcedType>
+                                        <!-- Convert varchar column with name 'someJsonObject' to a io.vertx.core.json.JsonObject-->
+                                        <forcedType>
+                                            <userType>io.vertx.core.json.JsonObject</userType>
+                                            <converter>io.github.jklingsporn.vertx.jooq.shared.JsonObjectConverter</converter>
+                                            <includeExpression>.*JSON.*</includeExpression>
+                                            <types>.*</types>
+                                        </forcedType>
+                                        <!-- Convert varchar column with name 'someJsonArray' to a io.vertx.core.json.JsonArray-->
+                                        <forcedType>
+                                            <userType>io.vertx.core.json.JsonArray</userType>
+                                            <converter>io.github.jklingsporn.vertx.jooq.shared.JsonArrayConverter</converter>
+                                            <includeExpression>.*JSON_ARRAY.*</includeExpression>
+                                            <types>.*</types>
+                                        </forcedType>
+                                    </forcedTypes>
+                                </database>
+                                <target>
+                                    <packageName>io.github.crabzilla.examples.accounts.infra.datamodel</packageName>
+                                    <directory>src/main/java</directory>
+                                </target>
+                                <generate>
+                                    <pojos>true</pojos>
+                                    <daos>true</daos>
+                                    <fluentSetters>true</fluentSetters>
+                                    <interfaces>true</interfaces>
+                                    <records>false</records>
+                                </generate>
+                                <strategy>
+                                    <name>io.github.jklingsporn.vertx.jooq.generate.VertxGeneratorStrategy</name>
+                                </strategy>
+                            </generator>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
 
 </project>

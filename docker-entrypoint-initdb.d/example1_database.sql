@@ -1,6 +1,6 @@
-CREATE DATABASE example1 OWNER user1;
+CREATE DATABASE example1_read OWNER user1;
 
-\connect example1 ;
+\connect example1_read  ;
 
 -- read model
 
@@ -16,9 +16,11 @@ CREATE TABLE account_summary (
     PRIMARY KEY (id)
 );
 
+CREATE DATABASE example1_write OWNER user1;
 
--- write model (in production, it could be a different database instance)
+\connect example1_write  ;
 
+-- write model
 
 CREATE TABLE units_of_work (
       uow_id BIGSERIAL,

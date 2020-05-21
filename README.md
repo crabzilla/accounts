@@ -14,8 +14,8 @@ I needed a better example than the dumb "example1 customer" used within Crabzill
 
 #### Business
 
-* ```POST /commands/accounts/:entityId/make-deposit``` to make a deposit (and create an account if needed) 
-* ```POST /commands/accounts/:entityId/make-withdraw``` to make a withdraw
+* ```POST /commands/account/:entityId/make-deposit``` to make a deposit (and create an account if needed) 
+* ```POST /commands/account/:entityId/make-withdraw``` to make a withdraw
 * ```GET /index.html``` to see events published to UI
 * ```GET /inconsistencies``` to see a self-check of inconsistencies between read and write models.
 * Transfer between accounts (TODO using a Saga)
@@ -55,7 +55,7 @@ now let's open an account #2001 with $10.00:
 
 ```bash
 curl -i -X POST \
-   http://localhost:8081/commands/accounts/2001/make-deposit \
+   http://localhost:8081/commands/account/2001/make-deposit \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 10.00}'
@@ -66,13 +66,13 @@ the response should be similar to:
 ```
 HTTP/1.1 303 See Other
 accept: application/json
-Location: http://localhost:8081/commands/accounts/units-of-work/1
+Location: http://localhost:8081/commands/account/units-of-work/1
 content-length: 0
 ```
 following the redirect: 
 
 ```
-curl -i -X GET http://localhost:8081/commands/accounts/units-of-work/1
+curl -i -X GET http://localhost:8081/commands/account/units-of-work/1
 ```
 
 ```
@@ -114,7 +114,7 @@ then let's try to withdrawn $15 from that account #2001:
 
 ```bash
 curl -i -X POST \
-   http://localhost:8081/commands/accounts/2001/make-withdraw \
+   http://localhost:8081/commands/account/2001/make-withdraw \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 15.00}' 
@@ -132,7 +132,7 @@ so let's make a valid withdraw:
 
 ```bash
 curl -i -X POST \
-   http://localhost:8081/commands/accounts/2001/make-withdraw \
+   http://localhost:8081/commands/account/2001/make-withdraw \
    -H 'cache-control: no-cache' \
    -H 'content-type: application/json' \
    -d '{"amount" : 6.00}' 
@@ -143,7 +143,7 @@ the result:
 ```
 HTTP/1.1 303 See Other
 accept: application/json
-Location: http://localhost:8081/commands/accounts/units-of-work/2
+Location: http://localhost:8081/commands/account/units-of-work/2
 content-length: 0
 ```
 
@@ -181,7 +181,7 @@ Now let's see this account full track:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8081/commands/accounts/2001/units-of-work \
+   http://localhost:8081/commands/account/2001/units-of-work \
    -H 'cache-control: no-cache' 
 ```
 
