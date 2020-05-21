@@ -5,7 +5,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.crabzilla.examples</groupId>
+    <groupId>io.github.crabzilla</groupId>
     <artifactId>accounts</artifactId>
     <version>v0.0.8</version>
     <packaging>pom</packaging>
