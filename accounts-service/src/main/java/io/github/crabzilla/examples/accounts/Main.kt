@@ -15,9 +15,9 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.eventbus.EventBusOptions
 import io.vertx.spi.cluster.hazelcast.ConfigUtil
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
-import java.lang.management.ManagementFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.management.ManagementFactory
 
 object
 Main {
@@ -40,12 +40,19 @@ Main {
             val config = gotConfig.result()
             val webOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(cores)
             val backOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(1)
-            CompositeFuture.all(
-                    deploy(vertx, WebCommandVerticle::class.java.name, webOptions),
-                    deploy(vertx, WebQueryVerticle::class.java.name, webOptions),
-                    deploySingleton(vertx, DbProjectionsVerticle::class.java.name, backOptions, processId),
-                    deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
-                    .onComplete(deployHandler(vertx))
+            if (args.contains("--backend-only")) {
+              CompositeFuture.all(
+                deploySingleton(vertx, DbProjectionsVerticle::class.java.name, backOptions, processId),
+                deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
+                .onComplete(deployHandler(vertx))
+            } else {
+              CompositeFuture.all(
+                deploy(vertx, WebCommandVerticle::class.java.name, webOptions),
+                deploy(vertx, WebQueryVerticle::class.java.name, webOptions),
+                deploySingleton(vertx, DbProjectionsVerticle::class.java.name, backOptions, processId),
+                deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
+                .onComplete(deployHandler(vertx))
+            }
           } else {
             log.error("Failed to get config", gotConfig.cause())
           }

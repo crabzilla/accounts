@@ -21,7 +21,7 @@ This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/).
 ##### Technical
 
 * The [UnitOfWork](https://github.com/crabzilla/crabzilla/blob/master/crabzilla-core/src/main/java/io/github/crabzilla/UnitOfWork.kt) resulting from a ```Command``` successful submission will be stored as JSON on the [units_of_work](https://github.com/crabzilla/accounts/blob/2493094caa9f77d931f87fe1b7c183463ea903c1/docker-entrypoint-initdb.d/example1_database.sql#L22) table.
-* It leverages Vert.x HA features: event projector is a cluster aware and fail safe singleton verticle. Just run ```java -jar target/accounts-service.jar``` in another console to start a new app instance (http and Hazelcast ports will be increased by 1)
+* It leverages Vert.x HA features: event projector is a cluster aware and fail safe singleton verticle. 
 
 ### Requirements
 
@@ -253,6 +253,14 @@ content-length: 44
 
 ## Developer's use cases
 
+### Running another instance
+
+In another console, just run
+
+```java -jar target/accounts-service.jar --backend-only``` 
+
+Then another app instance will start. Only backend verticles will be deployed, if necessary.
+ 
 ### Recreating the database from scratch:
 
 ```bash
