@@ -13,10 +13,10 @@ This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/).
 
 ##### Business
 
-* ```POST /commands/account/:entityId/make-deposit``` to make a deposit (and create an account if needed) 
-* ```POST /commands/account/:entityId/make-withdraw``` to make a withdraw
-* ```GET /index.html``` to see events published to UI
-* ```GET /inconsistencies``` to see a self-check of inconsistencies between read and write models.
+* ```POST localhost:8081/commands/account/:entityId/make-deposit``` to make a deposit (and create an account if needed) 
+* ```POST localhost:8081/commands/account/:entityId/make-withdraw``` to make a withdraw
+* ```GET localhost:8082/index.html``` to see events published to UI
+* ```GET localhost:8082/inconsistencies``` to see a self-check of inconsistencies between read and write models.
 
 ##### Technical
 
@@ -234,7 +234,7 @@ Finally, let's see how is the account read model:
 
 ```bash
 curl -i -X GET \
-   http://localhost:8181/accounts/2001 \
+   http://localhost:8082/accounts/2001 \
    -H 'cache-control: no-cache' 
 ```
 
@@ -267,7 +267,7 @@ docker-compose up
 * Select `PostgreSQL` as database
 * Set `user1` as username
 * Set `pwd1` as passwor
-* Set `example1_write`as database 
+* Set `example1_write`as database (or `example1_read`)
 
 ### Testing with Gatling:
 
