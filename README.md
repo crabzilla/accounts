@@ -13,14 +13,10 @@ This is an app built with [Crabzilla](https://crabzilla.github.io/crabzilla/).
 
 ##### Business
 
-* ```POST localhost:8081/commands/account/:entityId/make-deposit``` 
-   to make a deposit (and create an account if needed) 
-* ```POST localhost:8081/commands/account/:entityId/make-withdraw``` 
-   to make a withdraw
-* ```GET localhost:8082/index.html``` 
-   to see events published to UI
-* ```GET localhost:8082/inconsistencies``` 
-   to see a self-check of inconsistencies between read and write models.
+* ```POST localhost:8081/commands/account/:entityId/make-deposit``` to make a deposit  
+* ```POST localhost:8081/commands/account/:entityId/make-withdraw``` to make a withdraw
+* ```GET localhost:8082/index.html``` to see accounts events published to UI
+* ```GET localhost:8082/inconsistencies``` to see inconsistencies between read and write models
 
 ##### Technical
 
