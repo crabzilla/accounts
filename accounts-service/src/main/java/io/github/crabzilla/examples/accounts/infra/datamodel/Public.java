@@ -5,13 +5,12 @@ package io.github.crabzilla.examples.accounts.infra.datamodel;
 
 
 import io.github.crabzilla.examples.accounts.infra.datamodel.tables.AccountSummary;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 /**

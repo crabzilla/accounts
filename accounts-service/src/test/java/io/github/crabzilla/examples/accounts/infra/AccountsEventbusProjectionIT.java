@@ -24,6 +24,7 @@ import static io.github.crabzilla.examples.accounts.infra.Db_boilerplateKt.clean
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport.getConfig;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploy;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport.findFreeHttpPort;
+import static io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.deploySingleton;
 import static io.vertx.junit5.web.TestRequest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,9 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  **/
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AcceptanceIT {
+class AccountsEventbusProjectionIT {
 
-  private static final Logger log = LoggerFactory.getLogger(AcceptanceIT.class);
+  private static final Logger log = LoggerFactory.getLogger(AccountsEventbusProjectionIT.class);
   private static WebClient readWebClient;
   private static WebClient writeWebClient;
   private static final Random random = new Random();
@@ -43,23 +44,23 @@ class AcceptanceIT {
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
     getConfig(vertx, "./../accounts.env")
-            .onFailure(tc::failNow)
-            .onSuccess(config -> {
-                      config.put("WRITE_HTTP_PORT", findFreeHttpPort());
-                      config.put("READ_HTTP_PORT", findFreeHttpPort() + 1);
-                      writeWebClient = create(vertx, config.getInteger("WRITE_HTTP_PORT"));
-                      readWebClient = create(vertx, config.getInteger("READ_HTTP_PORT"));
-                      DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
-                      CompositeFuture.all(
-                              deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
-                              deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
-                              deploy(vertx, DbProjectionsVerticle.class.getName(), deploymentOptions)
-                      ).onSuccess(ok -> cleanDatabase(vertx, config)
-                              .onSuccess(ok2 -> tc.completeNow())
-                              .onFailure(tc::failNow)
-                      ).onFailure(tc::failNow);
-                    }
-            );
+      .onFailure(tc::failNow)
+      .onSuccess(config -> {
+          config.put("WRITE_HTTP_PORT", findFreeHttpPort());
+          config.put("READ_HTTP_PORT", findFreeHttpPort() + 1);
+          writeWebClient = create(vertx, config.getInteger("WRITE_HTTP_PORT"));
+          readWebClient = create(vertx, config.getInteger("READ_HTTP_PORT"));
+          DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
+          CompositeFuture.all(
+                  deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
+                  deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
+                  deploySingleton(vertx, new DbProjectionsVerticle(), deploymentOptions, "test")
+          ).onSuccess(ok -> cleanDatabase(vertx, config)
+                  .onSuccess(ok2 -> tc.completeNow())
+                  .onFailure(tc::failNow)
+          ).onFailure(tc::failNow);
+        }
+      );
   }
 
   static WebClient create(Vertx vertx, int httpPort) {
@@ -87,7 +88,6 @@ class AcceptanceIT {
     class When1 {
 
       @Test
-      @Order(1)
       @DisplayName("You get version 1 and events = AccountCreated and $10 AmountDeposit")
       void a1(VertxTestContext tc) {
         JsonObject cmdAsJson = new JsonObject("{\"amount\" : 10.00}");
@@ -113,7 +113,6 @@ class AcceptanceIT {
       }
 
       @Test
-      @Order(2)
       @DisplayName("You get account summary with balance = 10.00")
       void a2(VertxTestContext tc) {
         readWebClient.get("/accounts/" + randomAcctId)
@@ -130,7 +129,6 @@ class AcceptanceIT {
       }
 
       @Test
-      @Order(3)
       @DisplayName("You get accounts with just this account")
       void a22(VertxTestContext tc) {
         readWebClient.get("/accounts")
@@ -147,7 +145,6 @@ class AcceptanceIT {
           );
       }
 
-      @Order(4)
       @Test
       @DisplayName("You don't have any inconsistency between your write and read models")
       void a23(VertxTestContext tc) {
@@ -167,7 +164,6 @@ class AcceptanceIT {
       class When2 {
 
         @Test
-        @Order(1)
         @DisplayName("You get version 2 and a $5 AmountWithdrawn event")
         void a3(VertxTestContext tc) {
           JsonObject cmdAsJson = new JsonObject("{\"amount\" : 5.00}");
@@ -192,7 +188,6 @@ class AcceptanceIT {
                   );
         }
 
-        @Order(2)
         @DisplayName("You get account summary with balance = 5.00")
         void a4(VertxTestContext tc) throws InterruptedException {
           readWebClient.get("/commands/account/" + randomAcctId)
@@ -214,7 +209,6 @@ class AcceptanceIT {
         class When3 {
 
           @Test
-          @Order(1)
           @DisplayName("You get version 3 and and $1 AmountDeposit event")
           void a5(VertxTestContext tc) {
             JsonObject cmdAsJson = new JsonObject("{\"amount\" : 1.00}");
@@ -239,7 +233,6 @@ class AcceptanceIT {
                     );
           }
 
-          @Order(2)
           @DisplayName("You get account with just this account")
           void a6(VertxTestContext tc) throws InterruptedException {
             readWebClient.get("/commands/account")
@@ -258,7 +251,6 @@ class AcceptanceIT {
                     );
           }
 
-          @Order(3)
           @DisplayName("You get account summary with balance = 6.00")
           void a7(VertxTestContext tc) throws InterruptedException {
             readWebClient.get("/commands/account/" + randomAcctId)
@@ -280,7 +272,6 @@ class AcceptanceIT {
           class When4 {
 
             @Test
-            @Order(1)
             @DisplayName("You get 400")
             void a3(VertxTestContext tc) {
               JsonObject cmdAsJson = new JsonObject("{\"amount\" : 100.00}");
@@ -296,7 +287,6 @@ class AcceptanceIT {
                       );
             }
 
-            @Order(2)
             @DisplayName("Your account summary keep with balance = 6.00")
             void a4(VertxTestContext tc) {
               readWebClient.get("/commands/account/" + randomAcctId)

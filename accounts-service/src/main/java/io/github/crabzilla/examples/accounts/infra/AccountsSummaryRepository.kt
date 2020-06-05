@@ -8,7 +8,7 @@ import io.vertx.pgclient.PgPool
 import org.jooq.SQLDialect.POSTGRES
 import org.jooq.impl.DefaultConfiguration
 
-class DatabaseRepository(private val writeDb: PgPool, private val readDb: PgPool) {
+class AccountsSummaryRepository(private val writeDb: PgPool, readDb: PgPool) {
 
   private val jooq = DefaultConfiguration()
   private val dao = AccountSummaryDao(jooq, readDb)
@@ -16,15 +16,15 @@ class DatabaseRepository(private val writeDb: PgPool, private val readDb: PgPool
     jooq.setSQLDialect(POSTGRES)
   }
 
-  fun findAccountsSummary(id: Int): Future<AccountSummary> {
+  fun find(id: Int): Future<AccountSummary?> {
     return dao.findOneById(id)
   }
 
-  fun getAllAccountsSummary(): Future<MutableList<AccountSummary>> {
+  fun getAll(): Future<MutableList<AccountSummary>> {
     return dao.findAll()
   }
 
-  fun getAccountsFromWriteModel(): Future<MutableList<AccountSummary>> {
+  fun getFromWriteModel(): Future<MutableList<AccountSummary>> {
     val promise = Promise.promise<MutableList<AccountSummary>>()
     val sql = """SELECT account_snapshots.ar_id as id,
                               (account_snapshots.json_content -> 'balance')::numeric as balance

@@ -6,7 +6,6 @@ package io.github.crabzilla.examples.accounts.infra.datamodel;
 
 import io.github.crabzilla.examples.accounts.infra.datamodel.tables.AccountSummary;
 import io.github.crabzilla.examples.accounts.infra.datamodel.tables.records.AccountSummaryRecord;
-
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.impl.Internal;

@@ -1,17 +1,18 @@
 package io.github.crabzilla.examples.accounts.infra
 
-import io.github.crabzilla.core.CrabzillaContext
+import io.github.crabzilla.core.command.CrabzillaContext
 import io.github.crabzilla.examples.accounts.domain.AccountCmdAware
 import io.github.crabzilla.examples.accounts.domain.MakeDeposit
 import io.github.crabzilla.examples.accounts.domain.MakeWithdraw
 import io.github.crabzilla.examples.accounts.domain.accountsModule
-import io.github.crabzilla.examples.accounts.infra.boilerplate.listenHandler
-import io.github.crabzilla.examples.accounts.infra.boilerplate.writeModelPgPool
-import io.github.crabzilla.pgc.PgcSnapshotRepo
-import io.github.crabzilla.pgc.PgcUowJournal
-import io.github.crabzilla.pgc.PgcUowRepo
-import io.github.crabzilla.web.WebResourceContext
-import io.github.crabzilla.web.addResourceForEntity
+import io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport.listenHandler
+import io.github.crabzilla.examples.accounts.infra.boilerplate.PgClientSupport.writeModelPgPool
+import io.github.crabzilla.pgc.command.PgcSnapshotRepo
+import io.github.crabzilla.pgc.command.PgcUowJournal
+import io.github.crabzilla.pgc.command.PgcUowJournal.FullPayloadPublisher
+import io.github.crabzilla.pgc.command.PgcUowRepo
+import io.github.crabzilla.web.command.WebResourceContext
+import io.github.crabzilla.web.command.WebResourceContext.Companion.subRouteOf
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
 import io.vertx.core.http.HttpServerOptions
@@ -43,18 +44,24 @@ class WebCommandVerticle : AbstractVerticle() {
             Pair("make-withdraw", MakeWithdraw::class.qualifiedName as String))
 
     val accountsJson = Json(context = accountsModule)
-    val uowJournal = PgcUowJournal(vertx, writeDb, accountsJson)
-    val ctx = CrabzillaContext(accountsJson, PgcUowRepo(writeDb, accountsJson), uowJournal)
+    val uowJournal = PgcUowJournal(writeDb, accountsJson, FullPayloadPublisher(vertx))
+    val crabzillaCtx = CrabzillaContext(accountsJson, PgcUowRepo(writeDb, accountsJson), uowJournal)
     val cmdAware = AccountCmdAware()
     val snapshotRepo = PgcSnapshotRepo(writeDb, accountsJson, cmdAware) // TO write to db
     // val snapshotRepo = InMemorySnapshotRepository(vertx.sharedData(), accountsJson, cmdAware)
 
     val resourceContext = WebResourceContext(cmdTypeMap, cmdAware, snapshotRepo)
-    addResourceForEntity(router, ctx, resourceContext)
+    subRouteOf(router, crabzillaCtx, resourceContext)
 
     // http server
     log.info("WRITE_HTTP_PORT $httpPort")
     val server = vertx.createHttpServer(HttpServerOptions().setPort(httpPort).setHost("0.0.0.0"))
     server.requestHandler(router).listen(listenHandler(promise))
   }
+
+  override fun stop(promise: Promise<Void>) {
+    writeDb.close()
+    promise.complete()
+  }
+
 }

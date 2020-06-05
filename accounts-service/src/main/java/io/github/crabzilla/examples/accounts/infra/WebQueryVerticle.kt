@@ -1,8 +1,8 @@
 package io.github.crabzilla.examples.accounts.infra
 
-import io.github.crabzilla.examples.accounts.infra.boilerplate.listenHandler
-import io.github.crabzilla.examples.accounts.infra.boilerplate.readModelPgPool
-import io.github.crabzilla.examples.accounts.infra.boilerplate.writeModelPgPool
+import io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport.listenHandler
+import io.github.crabzilla.examples.accounts.infra.boilerplate.PgClientSupport.readModelPgPool
+import io.github.crabzilla.examples.accounts.infra.boilerplate.PgClientSupport.writeModelPgPool
 import io.github.crabzilla.examples.accounts.infra.datamodel.tables.pojos.AccountSummary
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
@@ -15,7 +15,7 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.LoggerHandler
 import io.vertx.ext.web.handler.StaticHandler
-import io.vertx.ext.web.handler.sockjs.BridgeOptions
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.pgclient.PgPool
 import org.slf4j.LoggerFactory.getLogger
@@ -38,12 +38,12 @@ class WebQueryVerticle : AbstractVerticle() {
     router.route().handler(LoggerHandler.create())
     router.route().handler(BodyHandler.create())
 
-    val repository = DatabaseRepository(writeDb, readDb)
+    val repository = AccountsSummaryRepository(writeDb, readDb)
 
     router.get("/accounts/:id").produces(JSON).handler { rc ->
       val id = rc.pathParam("id").toInt()
-      repository.findAccountsSummary(id)
-        .onSuccess { result ->
+      repository.find(id)
+        .onSuccess { result: AccountSummary? ->
           if (result != null) {
             rc.response().end(JsonObject.mapFrom(result).encodePrettily())
           } else {
@@ -54,7 +54,7 @@ class WebQueryVerticle : AbstractVerticle() {
     }
 
     router.get("/accounts").produces(JSON).handler { rc ->
-      repository.getAllAccountsSummary()
+      repository.getAll()
         .onSuccess { result -> rc.response().end(JsonArray(result).encode()) }
         .onFailure { err -> rc.response().setStatusCode(500).end(err.message) }
     }
@@ -70,7 +70,7 @@ class WebQueryVerticle : AbstractVerticle() {
     // eventBus to browser
     val sockJSHandler = SockJSHandler.create(vertx)
     // Allow events for the designated addresses in/out of the event bus bridge
-    val options = BridgeOptions().addOutboundPermitted(PermittedOptions()
+    val options = SockJSBridgeOptions().addOutboundPermitted(PermittedOptions()
       .setAddress(config.getString("UI_PROJECTION_CHANNEL")))
     sockJSHandler.bridge(options)
     router.route("/eventbus/*").handler(sockJSHandler)
@@ -84,11 +84,11 @@ class WebQueryVerticle : AbstractVerticle() {
     server.requestHandler(router).listen(listenHandler(promise))
   }
 
-  private fun insconsistenciesHandler(repo: DatabaseRepository): Future<JsonArray> {
+  private fun insconsistenciesHandler(repo: AccountsSummaryRepository): Future<JsonArray> {
     val promise = Promise.promise<JsonArray>()
-    repo.getAllAccountsSummary()
+    repo.getAll()
       .onSuccess { readModel: MutableList<AccountSummary> ->
-        repo.getAccountsFromWriteModel()
+        repo.getFromWriteModel()
           .onSuccess { writeModel: MutableList<AccountSummary> ->
             val readMap = readModel.map { it.id to it.balance }.toMap()
             val writeMap = writeModel.map { it.id to it.balance }.toMap()

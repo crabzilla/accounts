@@ -7,14 +7,13 @@ package io.github.crabzilla.examples.accounts.infra.datamodel.tables.records;
 import io.github.crabzilla.examples.accounts.infra.datamodel.tables.AccountSummary;
 import io.github.crabzilla.examples.accounts.infra.datamodel.tables.interfaces.IAccountSummary;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-
-import java.math.BigDecimal;
-
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Record2;
 import org.jooq.Row2;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import java.math.BigDecimal;
 
 
 /**

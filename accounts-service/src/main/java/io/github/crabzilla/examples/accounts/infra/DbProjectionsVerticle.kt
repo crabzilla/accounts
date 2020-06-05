@@ -1,15 +1,16 @@
 package io.github.crabzilla.examples.accounts.infra
 
-import io.github.crabzilla.core.DomainEvent
+import io.github.crabzilla.core.command.DomainEvent
 import io.github.crabzilla.examples.accounts.domain.AccountCreated
 import io.github.crabzilla.examples.accounts.domain.AmountDeposited
 import io.github.crabzilla.examples.accounts.domain.AmountWithdrawn
 import io.github.crabzilla.examples.accounts.domain.accountsModule
-import io.github.crabzilla.examples.accounts.infra.boilerplate.addSingletonListener
-import io.github.crabzilla.examples.accounts.infra.boilerplate.readModelPgPool
-import io.github.crabzilla.pgc.PgcEventProjector
-import io.github.crabzilla.pgc.PgcReadContext
-import io.github.crabzilla.pgc.addProjector
+import io.github.crabzilla.examples.accounts.infra.boilerplate.PgClientSupport.readModelPgPool
+import io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.SingletonClusteredVerticle
+import io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.addSingletonListener
+import io.github.crabzilla.pgc.query.PgcDomainEventProjector
+import io.github.crabzilla.pgc.query.PgcReadContext
+import io.github.crabzilla.pgc.query.startProjectionConsumingFromEventbus
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.Promise
@@ -20,7 +21,7 @@ import kotlinx.serialization.json.Json
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class DbProjectionsVerticle : AbstractVerticle() {
+class DbProjectionsVerticle : AbstractVerticle(), SingletonClusteredVerticle {
 
   companion object {
     val log: Logger = LoggerFactory.getLogger(DbProjectionsVerticle::class.java)
@@ -30,16 +31,21 @@ class DbProjectionsVerticle : AbstractVerticle() {
 
   override fun start(startPromise: Promise<Void>) {
 
-    addSingletonListener(vertx, this::class.java.name)
+    addSingletonListener(vertx, this)
 
     val accountsJson = Json(context = accountsModule)
     val readContext = PgcReadContext(vertx, accountsJson, readDb)
-    addProjector(readContext, "accounts-summary", AccountsSummaryProjector())
+    startProjectionConsumingFromEventbus("account", "accounts-summary", readContext, AccountsSummaryProjector())
 
     startPromise.complete()
   }
 
-  private class AccountsSummaryProjector : PgcEventProjector {
+  override fun stop(promise: Promise<Void>) {
+    readDb.close()
+    promise.complete()
+  }
+
+  private class AccountsSummaryProjector : PgcDomainEventProjector {
     override fun handle(pgTx: Transaction, targetId: Int, event: DomainEvent): Future<Void> {
       return when (event) {
         is AccountCreated -> {

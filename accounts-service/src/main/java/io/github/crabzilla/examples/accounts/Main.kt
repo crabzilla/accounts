@@ -4,10 +4,10 @@ import io.github.crabzilla.examples.accounts.infra.DbProjectionsVerticle
 import io.github.crabzilla.examples.accounts.infra.UIProjectionsVerticle
 import io.github.crabzilla.examples.accounts.infra.WebCommandVerticle
 import io.github.crabzilla.examples.accounts.infra.WebQueryVerticle
-import io.github.crabzilla.examples.accounts.infra.boilerplate.deploy
-import io.github.crabzilla.examples.accounts.infra.boilerplate.deployHandler
-import io.github.crabzilla.examples.accounts.infra.boilerplate.deploySingleton
-import io.github.crabzilla.examples.accounts.infra.boilerplate.getConfig
+import io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport.getConfig
+import io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploy
+import io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deployHandler
+import io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.deploySingleton
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
@@ -40,17 +40,20 @@ Main {
             val config = gotConfig.result()
             val webOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(cores)
             val backOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(1)
+            if (args.contains("--db-pooling")) {
+              config.put("PROJECTOR_TYPE", if (args.contains("--db-pooling")) "db-pooling" else "eventbus")
+            }
             if (args.contains("--backend-only")) {
               CompositeFuture.all(
-                deploySingleton(vertx, DbProjectionsVerticle::class.java.name, backOptions, processId),
-                deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
+                deploySingleton(vertx, DbProjectionsVerticle(), backOptions, processId),
+                deploySingleton(vertx, UIProjectionsVerticle(), backOptions, processId))
                 .onComplete(deployHandler(vertx))
             } else {
               CompositeFuture.all(
                 deploy(vertx, WebCommandVerticle::class.java.name, webOptions),
                 deploy(vertx, WebQueryVerticle::class.java.name, webOptions),
-                deploySingleton(vertx, DbProjectionsVerticle::class.java.name, backOptions, processId),
-                deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
+                deploySingleton(vertx, DbProjectionsVerticle(), backOptions, processId),
+                deploySingleton(vertx, UIProjectionsVerticle(), backOptions, processId))
                 .onComplete(deployHandler(vertx))
             }
           } else {

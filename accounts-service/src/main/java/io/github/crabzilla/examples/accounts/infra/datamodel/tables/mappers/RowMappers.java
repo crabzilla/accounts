@@ -1,6 +1,7 @@
 package io.github.crabzilla.examples.accounts.infra.datamodel.tables.mappers;
 
 import io.vertx.sqlclient.Row;
+
 import java.util.function.Function;
 
 public class RowMappers {

@@ -1,6 +1,7 @@
 package io.github.crabzilla.examples.accounts.infra;
 
 import io.github.crabzilla.examples.accounts.domain.MakeDeposit;
+import io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -20,7 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-import static io.github.crabzilla.examples.accounts.infra.boilerplate.CleanDatabaseKt.cleanDatabase;
+import static io.github.crabzilla.examples.accounts.infra.Db_boilerplateKt.cleanDatabase;
+import static io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploy;
+import static io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport.findFreeHttpPort;
 import static io.vertx.junit5.web.TestRequest.*;
 
 /**
@@ -36,18 +39,18 @@ class ErrorScenariosIT {
 
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
-    io.github.crabzilla.examples.accounts.infra.boilerplate.Web_boilerplateKt.getConfig(vertx, "./../accounts.env")
+    ConfigSupport.getConfig(vertx, "./../accounts.env")
       .onFailure(tc::failNow)
       .onSuccess(config -> {
-        config.put("WRITE_HTTP_PORT", io.github.crabzilla.examples.accounts.infra.boilerplate.Web_boilerplateKt.findFreeHttpPort());
-        config.put("READ_HTTP_PORT", io.github.crabzilla.examples.accounts.infra.boilerplate.Web_boilerplateKt.findFreeHttpPort()+1);
+        config.put("WRITE_HTTP_PORT", findFreeHttpPort());
+        config.put("READ_HTTP_PORT", findFreeHttpPort()+1);
         writeWebClient = create(vertx, config.getInteger("WRITE_HTTP_PORT"));
         readWebClient = create(vertx, config.getInteger("READ_HTTP_PORT"));
         DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
         CompositeFuture.all(
-          io.github.crabzilla.examples.accounts.infra.boilerplate.Web_boilerplateKt.deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
-          io.github.crabzilla.examples.accounts.infra.boilerplate.Web_boilerplateKt.deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
-          io.github.crabzilla.examples.accounts.infra.boilerplate.Web_boilerplateKt.deploy(vertx, DbProjectionsVerticle.class.getName(), deploymentOptions)
+          deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
+          deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
+          deploy(vertx, DbProjectionsVerticle.class.getName(), deploymentOptions)
         ).onSuccess(ok -> cleanDatabase(vertx, config)
           .onSuccess(ok2 -> tc.completeNow())
           .onFailure(tc::failNow)

@@ -1,15 +1,14 @@
 package io.github.crabzilla.examples.accounts.domain
 
-import io.github.crabzilla.core.Command
-import io.github.crabzilla.core.DomainEvent
-import io.github.crabzilla.core.Entity
-import io.github.crabzilla.core.EntityCommandAware
+import io.github.crabzilla.core.command.AggregateRoot
+import io.github.crabzilla.core.command.AggregateRootCommandAware
+import io.github.crabzilla.core.command.Command
+import io.github.crabzilla.core.command.DomainEvent
 import io.vertx.core.Future
 import io.vertx.core.Future.failedFuture
 import io.vertx.core.Future.succeededFuture
-import java.math.BigDecimal
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
+import java.math.BigDecimal
 
 @Serializable
 data class AccountId(val value: Int)
@@ -29,7 +28,7 @@ data class AmountDeposited(val amount: Double) : DomainEvent()
 data class AmountWithdrawn(val amount: Double) : DomainEvent()
 
 // command aware
-class AccountCmdAware : EntityCommandAware<Account> {
+class AccountCmdAware : AggregateRootCommandAware<Account> {
   override val entityName = "account"
   override val initialState = Account()
   override val applyEvent = { event: DomainEvent, state: Account ->
@@ -60,7 +59,7 @@ class AccountCmdAware : EntityCommandAware<Account> {
 
 // aggregate root
 @Serializable
-data class Account(val accountId: AccountId? = null, val balance: Double = 0.00) : Entity()
+data class Account(val accountId: AccountId? = null, val balance: Double = 0.00) : AggregateRoot()
 
 fun Account.deposit(accountId: AccountId, amount: BigDecimal): List<DomainEvent> {
   if (this.accountId == null) {
@@ -74,18 +73,3 @@ fun Account.withdrawn(amount: BigDecimal): List<DomainEvent> {
   return listOf(AmountWithdrawn(amount.toDouble()))
 }
 
-// json
-val accountsModule = SerializersModule {
-  polymorphic(Entity::class) {
-    Account::class with Account.serializer()
-  }
-  polymorphic(Command::class) {
-    MakeDeposit::class with MakeDeposit.serializer()
-    MakeWithdraw::class with MakeWithdraw.serializer()
-  }
-  polymorphic(DomainEvent::class) {
-    AccountCreated::class with AccountCreated.serializer()
-    AmountDeposited::class with AmountDeposited.serializer()
-    AmountWithdrawn::class with AmountWithdrawn.serializer()
-  }
-}

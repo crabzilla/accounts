@@ -1,5 +1,7 @@
-package io.github.crabzilla.examples.accounts.infra.boilerplate
+package io.github.crabzilla.examples.accounts.infra
 
+import io.github.crabzilla.examples.accounts.infra.boilerplate.PgClientSupport.readModelPgPool
+import io.github.crabzilla.examples.accounts.infra.boilerplate.PgClientSupport.writeModelPgPool
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Promise
