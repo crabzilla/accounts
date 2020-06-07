@@ -1,7 +1,6 @@
 package io.github.crabzilla.examples.accounts.infra;
 
 import io.github.crabzilla.examples.accounts.domain.MakeDeposit;
-import io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -22,7 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Random;
 
 import static io.github.crabzilla.examples.accounts.infra.Db_boilerplateKt.cleanDatabase;
+import static io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport.getConfig;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploy;
+import static io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploySingleton;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport.findFreeHttpPort;
 import static io.vertx.junit5.web.TestRequest.*;
 
@@ -39,24 +40,35 @@ class ErrorScenariosIT {
 
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
-    ConfigSupport.getConfig(vertx, "./../accounts.env")
-      .onFailure(tc::failNow)
+    getConfig(vertx, "./../accounts.env")
+      .onFailure(err -> {
+        tc.failNow(err);
+        log.error("*** ", err); })
       .onSuccess(config -> {
         config.put("WRITE_HTTP_PORT", findFreeHttpPort());
-        config.put("READ_HTTP_PORT", findFreeHttpPort()+1);
+        config.put("READ_HTTP_PORT", findFreeHttpPort() + 1);
         writeWebClient = create(vertx, config.getInteger("WRITE_HTTP_PORT"));
         readWebClient = create(vertx, config.getInteger("READ_HTTP_PORT"));
         DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
         CompositeFuture.all(
           deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
           deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
-          deploy(vertx, DbProjectionsVerticle.class.getName(), deploymentOptions)
-        ).onSuccess(ok -> cleanDatabase(vertx, config)
-          .onSuccess(ok2 -> tc.completeNow())
-          .onFailure(tc::failNow)
-        ).onFailure(tc::failNow);
-      }
-    );
+          deploySingleton(vertx, new DatabaseProjectionsVerticle(), deploymentOptions, "test"))
+          .onFailure(err -> {
+            tc.failNow(err);
+            log.error("*** ", err); })
+          .onSuccess(ok ->
+            cleanDatabase(vertx, config)
+              .onFailure(err -> {
+                tc.failNow(err);
+                log.error("*** ", err);
+              })
+              .onSuccess(ok2 -> {
+                tc.completeNow();
+                log.info("*** ok");
+              }));
+      });
+
   }
 
   static WebClient create(Vertx vertx, int httpPort) {
@@ -98,13 +110,13 @@ class ErrorScenariosIT {
   @DisplayName("When making a $10 deposit on an invalid account (ID not a number)")
   class When13 {
     @Test
-    @DisplayName("You get a 404")
+    @DisplayName("You get a 400")
     void a13(VertxTestContext tc) {
       MakeDeposit makeDeposit = new MakeDeposit(10);
       JsonObject cmdAsJson = JsonObject.mapFrom(makeDeposit);
-      testRequest(writeWebClient, HttpMethod.POST, "/commands/accounts/NOT_A_NUMBER/make-deposit")
-        .expect(statusCode(404))
-        .expect(statusMessage("Not Found"))
+      testRequest(writeWebClient, HttpMethod.POST, "/commands/account/NOT_A_NUMBER/make-deposit")
+        .expect(statusCode(400))
+        .expect(statusMessage("path param entityId must be a number"))
         .sendJson(cmdAsJson, tc);
     }
   }
@@ -115,7 +127,7 @@ class ErrorScenariosIT {
     @Test
     @DisplayName("You get a 404")
     void a14(VertxTestContext tc) {
-      testRequest(readWebClient, HttpMethod.GET, "/commands/accounts/units-of-work/dddd")
+      testRequest(readWebClient, HttpMethod.GET, "/commands/account/units-of-work/dddd")
         .expect(statusCode(404))
         .expect(statusMessage("Not Found"))
         .send(tc);

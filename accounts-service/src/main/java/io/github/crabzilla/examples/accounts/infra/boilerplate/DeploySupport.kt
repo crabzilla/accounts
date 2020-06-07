@@ -1,5 +1,6 @@
 package io.github.crabzilla.examples.accounts.infra.boilerplate
 
+import io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.SingletonClusteredVerticle
 import io.vertx.core.AsyncResult
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
@@ -7,6 +8,7 @@ import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Promise
 import io.vertx.core.Vertx
+import io.vertx.core.json.JsonObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -47,4 +49,28 @@ object DeploySupport {
     }
   }
 
+  @JvmStatic
+  fun deploySingleton(vertx: Vertx, verticle: SingletonClusteredVerticle, dOpt: DeploymentOptions, processId: String):
+    Future<String> {
+
+    val promise = Promise.promise<String>()
+    val verticleClassName = verticle::class.java.name
+    vertx.eventBus().request<JsonObject>(verticleClassName, processId) { gotResponse ->
+      if (gotResponse.succeeded()) {
+        log.info("No need to deploy $verticle: " + gotResponse.result().body().encodePrettily())
+      } else {
+        log.info("*** Deploying $verticle")
+        vertx.deployVerticle(verticle, dOpt) { wasDeployed ->
+          if (wasDeployed.succeeded()) {
+            log.info("$verticle started")
+            promise.complete("singleton ${wasDeployed.result()}")
+          } else {
+            log.error("$verticle not started", wasDeployed.cause())
+            promise.fail(wasDeployed.cause())
+          }
+        }
+      }
+    }
+    return promise.future()
+  }
 }

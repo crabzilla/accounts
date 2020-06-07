@@ -1,13 +1,16 @@
 package io.github.crabzilla.examples.accounts
 
-import io.github.crabzilla.examples.accounts.infra.DbProjectionsVerticle
+import io.github.crabzilla.examples.accounts.infra.DatabaseProjectionsVerticle
+import io.github.crabzilla.examples.accounts.infra.EventbusProjectionsVerticle
 import io.github.crabzilla.examples.accounts.infra.UIProjectionsVerticle
 import io.github.crabzilla.examples.accounts.infra.WebCommandVerticle
 import io.github.crabzilla.examples.accounts.infra.WebQueryVerticle
 import io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport.getConfig
 import io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploy
 import io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deployHandler
-import io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.deploySingleton
+import io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploySingleton
+import io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport
+import io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.SingletonClusteredVerticle
 import io.vertx.core.CompositeFuture
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
@@ -26,6 +29,9 @@ Main {
 
   @JvmStatic
   fun main(args: Array<String>) {
+    val projectionVerticle: SingletonClusteredVerticle =
+      if (args.contains("--db")) DatabaseProjectionsVerticle() else EventbusProjectionsVerticle()
+    log.info("Using ${projectionVerticle::class.java.simpleName}")
     val cores = Runtime.getRuntime().availableProcessors()
     val processId = ManagementFactory.getRuntimeMXBean().name
     val hzConfig = ConfigUtil.loadConfig()
@@ -38,21 +44,23 @@ Main {
         getConfig(vertx, CONFIG_PATH).onComplete { gotConfig ->
           if (gotConfig.succeeded()) {
             val config = gotConfig.result()
+            // find free http ports
+            val candidatePorts = generateSequence(8080) { it + 1 }.take(20).toList()
+            val writePort = HttpSupport.findFreePort(candidatePorts, listOf())
+            config.put("WRITE_HTTP_PORT", writePort)
+            config.put("READ_HTTP_PORT", HttpSupport.findFreePort(candidatePorts, listOf(writePort)))
             val webOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(cores)
             val backOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(1)
-            if (args.contains("--db-pooling")) {
-              config.put("PROJECTOR_TYPE", if (args.contains("--db-pooling")) "db-pooling" else "eventbus")
-            }
             if (args.contains("--backend-only")) {
               CompositeFuture.all(
-                deploySingleton(vertx, DbProjectionsVerticle(), backOptions, processId),
+                deploySingleton(vertx, DatabaseProjectionsVerticle(), backOptions, processId),
                 deploySingleton(vertx, UIProjectionsVerticle(), backOptions, processId))
                 .onComplete(deployHandler(vertx))
             } else {
               CompositeFuture.all(
                 deploy(vertx, WebCommandVerticle::class.java.name, webOptions),
                 deploy(vertx, WebQueryVerticle::class.java.name, webOptions),
-                deploySingleton(vertx, DbProjectionsVerticle(), backOptions, processId),
+                deploySingleton(vertx, projectionVerticle, backOptions, processId),
                 deploySingleton(vertx, UIProjectionsVerticle(), backOptions, processId))
                 .onComplete(deployHandler(vertx))
             }

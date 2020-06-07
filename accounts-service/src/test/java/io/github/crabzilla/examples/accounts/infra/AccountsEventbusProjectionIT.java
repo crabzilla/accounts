@@ -12,7 +12,10 @@ import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +26,8 @@ import static io.github.crabzilla.core.command.UnitOfWork.JsonMetadata.*;
 import static io.github.crabzilla.examples.accounts.infra.Db_boilerplateKt.cleanDatabase;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.ConfigSupport.getConfig;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploy;
+import static io.github.crabzilla.examples.accounts.infra.boilerplate.DeploySupport.deploySingleton;
 import static io.github.crabzilla.examples.accounts.infra.boilerplate.HttpSupport.findFreeHttpPort;
-import static io.github.crabzilla.examples.accounts.infra.boilerplate.SingletonVerticleSupport.deploySingleton;
 import static io.vertx.junit5.web.TestRequest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Testing success scenarios
  **/
 @ExtendWith(VertxExtension.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountsEventbusProjectionIT {
 
   private static final Logger log = LoggerFactory.getLogger(AccountsEventbusProjectionIT.class);
@@ -44,23 +46,35 @@ class AccountsEventbusProjectionIT {
   @BeforeAll
   static void setup(VertxTestContext tc, Vertx vertx) {
     getConfig(vertx, "./../accounts.env")
-      .onFailure(tc::failNow)
-      .onSuccess(config -> {
+        .onFailure(err -> {
+          tc.failNow(err);
+          log.error("*** ", err);
+        })
+        .onSuccess(config -> {
           config.put("WRITE_HTTP_PORT", findFreeHttpPort());
           config.put("READ_HTTP_PORT", findFreeHttpPort() + 1);
           writeWebClient = create(vertx, config.getInteger("WRITE_HTTP_PORT"));
           readWebClient = create(vertx, config.getInteger("READ_HTTP_PORT"));
           DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(config).setInstances(1);
           CompositeFuture.all(
-                  deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
-                  deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
-                  deploySingleton(vertx, new DbProjectionsVerticle(), deploymentOptions, "test")
-          ).onSuccess(ok -> cleanDatabase(vertx, config)
-                  .onSuccess(ok2 -> tc.completeNow())
-                  .onFailure(tc::failNow)
-          ).onFailure(tc::failNow);
-        }
-      );
+              deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
+              deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
+              deploySingleton(vertx, new EventbusProjectionsVerticle(), deploymentOptions, "test"))
+              .onFailure(err -> {
+                tc.failNow(err);
+                log.error("*** ", err);
+              })
+              .onSuccess(ok ->
+                cleanDatabase(vertx, config)
+                  .onFailure(err -> {
+                    tc.failNow(err);
+                    log.error("*** ", err);
+                  })
+                  .onSuccess(ok2 -> {
+                    tc.completeNow();
+                    log.info("*** ok");
+                  }));
+        });
   }
 
   static WebClient create(Vertx vertx, int httpPort) {
@@ -114,49 +128,52 @@ class AccountsEventbusProjectionIT {
 
       @Test
       @DisplayName("You get account summary with balance = 10.00")
-      void a2(VertxTestContext tc) {
+      void a2(VertxTestContext tc) throws InterruptedException {
+        Thread.sleep(2000) ;// to wait for projection
         readWebClient.get("/accounts/" + randomAcctId)
-            .as(BodyCodec.jsonObject())
-            .expect(ResponsePredicate.SC_SUCCESS)
+                .as(BodyCodec.jsonObject())
+                .expect(ResponsePredicate.SC_SUCCESS)
 //            .expect(ResponsePredicate.JSON)
-            .send(tc.succeeding(response -> tc.verify(() -> {
-                      JsonObject result = response.body();
-                      assertThat(result.getInteger("id")).isEqualTo(randomAcctId);
-                      assertThat(result.getDouble("balance")).isEqualTo(10.00);
-                      tc.completeNow();
-                    }))
-            );
+                .send(tc.succeeding(response -> tc.verify(() -> {
+                          JsonObject result = response.body();
+                          assertThat(result.getInteger("id")).isEqualTo(randomAcctId);
+                          assertThat(result.getDouble("balance")).isEqualTo(10.00);
+                          tc.completeNow();
+                        }))
+                );
       }
 
       @Test
       @DisplayName("You get accounts with just this account")
-      void a22(VertxTestContext tc) {
+      void a22(VertxTestContext tc) throws InterruptedException {
+        Thread.sleep(1000) ;// to wait for projection
         readWebClient.get("/accounts")
-          .as(BodyCodec.jsonArray())
-          .expect(ResponsePredicate.SC_SUCCESS)
-          .send(tc.succeeding(response -> tc.verify(() -> {
-              JsonArray result = response.body();
-              assertThat(result.size()).isEqualTo(1);
-              JsonObject account = result.getJsonObject(0);
-              assertThat(account.getInteger("id")).isEqualTo(randomAcctId);
-              assertThat(account.getDouble("balance")).isEqualTo(10.00);
-              tc.completeNow();
-            }))
-          );
+                .as(BodyCodec.jsonArray())
+                .expect(ResponsePredicate.SC_SUCCESS)
+                .send(tc.succeeding(response -> tc.verify(() -> {
+                          JsonArray result = response.body();
+                          assertThat(result.size()).isEqualTo(1);
+                          JsonObject account = result.getJsonObject(0);
+                          assertThat(account.getInteger("id")).isEqualTo(randomAcctId);
+                          assertThat(account.getDouble("balance")).isEqualTo(10.00);
+                          tc.completeNow();
+                        }))
+                );
       }
 
       @Test
       @DisplayName("You don't have any inconsistency between your write and read models")
-      void a23(VertxTestContext tc) {
+      void a23(VertxTestContext tc) throws InterruptedException {
+        Thread.sleep(1000) ;// to wait for projection
         readWebClient.get("/inconsistencies")
-          .as(BodyCodec.jsonArray())
-          .expect(ResponsePredicate.SC_SUCCESS)
-          .send(tc.succeeding(response -> tc.verify(() -> {
-              JsonArray result = response.body();
-              assertThat(result.size()).isEqualTo(0);
-              tc.completeNow();
-            }))
-          );
+                .as(BodyCodec.jsonArray())
+                .expect(ResponsePredicate.SC_SUCCESS)
+                .send(tc.succeeding(response -> tc.verify(() -> {
+                          JsonArray result = response.body();
+                          assertThat(result.size()).isEqualTo(0);
+                          tc.completeNow();
+                        }))
+                );
       }
 
       @Nested
@@ -279,9 +296,8 @@ class AccountsEventbusProjectionIT {
                       .as(BodyCodec.jsonObject())
                       .expect(ResponsePredicate.SC_BAD_REQUEST)
                       .sendJsonObject(cmdAsJson, tc.succeeding(response -> tc.verify(() -> {
-                                JsonObject result = response.body();
-                                assertThat(response.statusMessage()).isEqualTo("This account does not have enough balance");
-                                assertThat(result).isNull();
+                                assertThat(response.statusMessage())
+                                        .isEqualTo("This account does not have enough balance");
                                 tc.completeNow();
                               }))
                       );

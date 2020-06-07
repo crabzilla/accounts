@@ -7,7 +7,7 @@
 
     <groupId>io.github.crabzilla</groupId>
     <artifactId>accounts</artifactId>
-    <version>0.0.9-snapshot</version>
+    <version>0.0.9-snapshot-2</version>
     <packaging>pom</packaging>
 
     <modules>

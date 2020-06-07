@@ -6,11 +6,31 @@ import io.vertx.core.Promise
 import io.vertx.core.http.HttpServer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.net.ServerSocket
 
 object HttpSupport {
 
   private val log: Logger = LoggerFactory.getLogger(HttpSupport::class.java)
+
+  @JvmStatic
+  @Throws(IOException::class)
+  fun findFreePort(ports: List<Int>, exceptPorts: List<Int>): Int {
+    for (port: Int in ports) {
+      if (exceptPorts.contains(port)) {
+        continue
+      }
+      try {
+        val socket = ServerSocket(port)
+        val httpPort = socket.localPort
+        socket.close()
+        return httpPort
+      } catch (ex: IOException) {
+        continue  // try next port
+      }
+    }
+    throw IOException("no free port found")
+  }
 
   @JvmStatic
   fun findFreeHttpPort(): Int {

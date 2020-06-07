@@ -26,12 +26,11 @@ class AccountsSummaryRepository(private val writeDb: PgPool, readDb: PgPool) {
 
   fun getFromWriteModel(): Future<MutableList<AccountSummary>> {
     val promise = Promise.promise<MutableList<AccountSummary>>()
-    val sql = """SELECT account_snapshots.ar_id as id,
-                              (account_snapshots.json_content -> 'balance')::numeric as balance
-                        FROM account_snapshots
-                       ORDER by account_snapshots.ar_id """
+    val sql = """SELECT ar_id as id, (json_content -> 'balance')::numeric as balance
+                        FROM crabz_account_snapshots ORDER by ar_id """
     writeDb.preparedQuery(sql).execute { event ->
       if (event.failed()) {
+        event.cause().printStackTrace()
         promise.fail(event.cause())
         return@execute
       }

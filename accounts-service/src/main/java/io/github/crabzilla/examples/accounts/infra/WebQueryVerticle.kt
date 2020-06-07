@@ -17,6 +17,7 @@ import io.vertx.ext.web.handler.LoggerHandler
 import io.vertx.ext.web.handler.StaticHandler
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
+import io.vertx.kotlin.core.json.jsonObjectOf
 import io.vertx.pgclient.PgPool
 import org.slf4j.LoggerFactory.getLogger
 
@@ -45,7 +46,9 @@ class WebQueryVerticle : AbstractVerticle() {
       repository.find(id)
         .onSuccess { result: AccountSummary? ->
           if (result != null) {
-            rc.response().end(JsonObject.mapFrom(result).encodePrettily())
+            rc.response()
+              .putHeader("content-type", JSON)
+              .end(JsonObject.mapFrom(result).encodePrettily())
           } else {
             rc.response().setStatusCode(404).end()
           }
@@ -55,16 +58,30 @@ class WebQueryVerticle : AbstractVerticle() {
 
     router.get("/accounts").produces(JSON).handler { rc ->
       repository.getAll()
-        .onSuccess { result -> rc.response().end(JsonArray(result).encode()) }
-        .onFailure { err -> rc.response().setStatusCode(500).end(err.message) }
+        .onSuccess { result ->
+          rc.response()
+            .putHeader("content-type", JSON)
+            .end(JsonArray(result).encode()) }
+        .onFailure { err ->
+          rc.response()
+            .putHeader("content-type", JSON)
+            .setStatusCode(500)
+            .end(jsonObjectOf(Pair("error", err.message)).encode()) }
     }
 
     router.get("/inconsistencies").handler { rc ->
       insconsistenciesHandler(repository)
         .onSuccess { errors ->
-          rc.response().setStatusCode(200).end(errors.encodePrettily())
+          rc.response()
+            .setStatusCode(200)
+            .putHeader("content-type", JSON)
+            .end(errors.encode())
         }
-        .onFailure { err -> rc.response().setStatusCode(500).end(err.message) }
+        .onFailure { err ->
+          rc.response()
+            .setStatusCode(500)
+            .putHeader("content-type", JSON)
+            .end(jsonObjectOf(Pair("error", err.message)).encode()) }
     }
 
     // eventBus to browser
@@ -108,9 +125,9 @@ class WebQueryVerticle : AbstractVerticle() {
             }
             promise.complete(errors)
           }
-          .onFailure { err -> promise.fail(err) }
+          .onFailure { err -> promise.fail(err); log.error("getFromWriteModel", err) }
       }
-      .onFailure { err -> promise.fail(err) }
+      .onFailure { err -> promise.fail(err);  log.error("getAll", err) }
     return promise.future()
   }
 }
