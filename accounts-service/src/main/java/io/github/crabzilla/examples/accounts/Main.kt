@@ -29,8 +29,8 @@ Main {
 
   @JvmStatic
   fun main(args: Array<String>) {
-    val projectionVerticle: SingletonClusteredVerticle =
-      if (args.contains("--db")) DatabaseProjectionsVerticle() else EventbusProjectionsVerticle()
+    val projectionVerticle = if (args.contains("--db"))
+        DatabaseProjectionsVerticle()::class.java.name else EventbusProjectionsVerticle()::class.java.name
     log.info("Using ${projectionVerticle::class.java.simpleName}")
     val cores = Runtime.getRuntime().availableProcessors()
     val processId = ManagementFactory.getRuntimeMXBean().name
@@ -53,15 +53,15 @@ Main {
             val backOptions = DeploymentOptions().setHa(true).setConfig(config).setInstances(1)
             if (args.contains("--backend-only")) {
               CompositeFuture.all(
-                deploySingleton(vertx, DatabaseProjectionsVerticle(), backOptions, processId),
-                deploySingleton(vertx, UIProjectionsVerticle(), backOptions, processId))
+                deploySingleton(vertx, projectionVerticle, backOptions, processId),
+                deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
                 .onComplete(deployHandler(vertx))
             } else {
               CompositeFuture.all(
                 deploy(vertx, WebCommandVerticle::class.java.name, webOptions),
                 deploy(vertx, WebQueryVerticle::class.java.name, webOptions),
                 deploySingleton(vertx, projectionVerticle, backOptions, processId),
-                deploySingleton(vertx, UIProjectionsVerticle(), backOptions, processId))
+                deploySingleton(vertx, UIProjectionsVerticle::class.java.name, backOptions, processId))
                 .onComplete(deployHandler(vertx))
             }
           } else {

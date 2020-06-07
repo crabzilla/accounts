@@ -50,22 +50,20 @@ object DeploySupport {
   }
 
   @JvmStatic
-  fun deploySingleton(vertx: Vertx, verticle: SingletonClusteredVerticle, dOpt: DeploymentOptions, processId: String):
+  fun deploySingleton(vertx: Vertx, verticleClassName: String, dOpt: DeploymentOptions, processId: String):
     Future<String> {
-
     val promise = Promise.promise<String>()
-    val verticleClassName = verticle::class.java.name
     vertx.eventBus().request<JsonObject>(verticleClassName, processId) { gotResponse ->
       if (gotResponse.succeeded()) {
-        log.info("No need to deploy $verticle: " + gotResponse.result().body().encodePrettily())
+        log.info("No need to deploy $verticleClassName: " + gotResponse.result().body().encodePrettily())
       } else {
-        log.info("*** Deploying $verticle")
-        vertx.deployVerticle(verticle, dOpt) { wasDeployed ->
+        log.info("*** Deploying $verticleClassName")
+        vertx.deployVerticle(verticleClassName, dOpt) { wasDeployed ->
           if (wasDeployed.succeeded()) {
-            log.info("$verticle started")
+            log.info("$verticleClassName started")
             promise.complete("singleton ${wasDeployed.result()}")
           } else {
-            log.error("$verticle not started", wasDeployed.cause())
+            log.error("$verticleClassName not started", wasDeployed.cause())
             promise.fail(wasDeployed.cause())
           }
         }

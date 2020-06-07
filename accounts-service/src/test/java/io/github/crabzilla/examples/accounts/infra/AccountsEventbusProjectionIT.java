@@ -59,7 +59,7 @@ class AccountsEventbusProjectionIT {
           CompositeFuture.all(
               deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
               deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
-              deploySingleton(vertx, new EventbusProjectionsVerticle(), deploymentOptions, "test"))
+              deploySingleton(vertx, EventbusProjectionsVerticle.class.getName(), deploymentOptions, "test"))
               .onFailure(err -> {
                 tc.failNow(err);
                 log.error("*** ", err);

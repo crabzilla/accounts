@@ -53,7 +53,7 @@ class ErrorScenariosIT {
         CompositeFuture.all(
           deploy(vertx, WebCommandVerticle.class.getName(), deploymentOptions),
           deploy(vertx, WebQueryVerticle.class.getName(), deploymentOptions),
-          deploySingleton(vertx, new DatabaseProjectionsVerticle(), deploymentOptions, "test"))
+          deploySingleton(vertx, DatabaseProjectionsVerticle.class.getName(), deploymentOptions, "test"))
           .onFailure(err -> {
             tc.failNow(err);
             log.error("*** ", err); })
