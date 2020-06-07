@@ -39,6 +39,7 @@ class EventbusProjectionsVerticle : AbstractVerticle(), SingletonClusteredVertic
   }
 
   override fun stop(promise: Promise<Void>) {
+    log.info("Closing resources")
     readDb.close()
     promise.complete()
   }

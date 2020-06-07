@@ -11,7 +11,6 @@ import io.github.crabzilla.pgc.query.startStreamProjectionConsumer
 import io.github.crabzilla.pgc.query.startStreamProjectionDbPoolingProducer
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
-import io.vertx.core.http.HttpServer
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.LoggerHandler
@@ -28,8 +27,6 @@ class DatabaseProjectionsVerticle : AbstractVerticle(), SingletonClusteredVertic
 
   private val readDb: PgPool by lazy { readModelPgPool(vertx, config()) }
   private val writeDb: PgPool by lazy { writeModelPgPool(vertx, config()) }
-
-  lateinit var server: HttpServer
 
   override fun logger(): Logger {
     return log
@@ -59,7 +56,10 @@ class DatabaseProjectionsVerticle : AbstractVerticle(), SingletonClusteredVertic
   }
 
   override fun stop(promise: Promise<Void>) {
+    log.info("Closing resources")
+    // TODO should notify startStreamProjectionConsumer to stop any new projection?
     readDb.close()
+    writeDb.close()
     promise.complete()
   }
 

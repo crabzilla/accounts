@@ -101,6 +101,13 @@ class WebQueryVerticle : AbstractVerticle() {
     server.requestHandler(router).listen(listenHandler(promise))
   }
 
+  override fun stop(promise: Promise<Void>) {
+    log.info("Closing resources")
+    readDb.close()
+    writeDb.close()
+    promise.complete()
+  }
+
   private fun insconsistenciesHandler(repo: AccountsSummaryRepository): Future<JsonArray> {
     val promise = Promise.promise<JsonArray>()
     repo.getAll()

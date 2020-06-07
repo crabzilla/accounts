@@ -60,6 +60,7 @@ class WebCommandVerticle : AbstractVerticle() {
   }
 
   override fun stop(promise: Promise<Void>) {
+    log.info("Closing resources")
     writeDb.close()
     promise.complete()
   }
